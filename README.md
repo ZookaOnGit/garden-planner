@@ -3,7 +3,7 @@
 This program provides:
 - a planner for different crops with times for sowing, planting and harvesting periods
 - a database to add your own crops
-- a simple easier to use interface that shows what tasks can be performed today
+- a simple easy to use interface that shows what tasks can be performed today
 
 ## Build
 Requires; qt6, cmake, ninja.  Linux only (atm).
