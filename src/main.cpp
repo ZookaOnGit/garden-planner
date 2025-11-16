@@ -22,6 +22,7 @@
 
 int main(int argc, char *argv[]) {
     QApplication app(argc, argv);
+    app->setApplicationName("Garden Planner");
     
     QSqlDatabase db = QSqlDatabase::addDatabase("QSQLITE");
     db.setDatabaseName("garden.db");

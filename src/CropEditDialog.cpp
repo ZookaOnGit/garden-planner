@@ -70,7 +70,6 @@ CropEditDialog::CropEditDialog(QWidget* parent) : QDialog(parent) {
     m_notesEdit->setPlaceholderText("Enter notes...");
     m_notesEdit->setAcceptRichText(false);
     m_notesEdit->setSizePolicy(QSizePolicy::MinimumExpanding, QSizePolicy::MinimumExpanding);
-    //m_notesEdit->setFixedHeight(100);
     form->addRow(m_notesEdit);
 
     mainLay->addLayout(form);
@@ -84,6 +83,8 @@ CropEditDialog::CropEditDialog(QWidget* parent) : QDialog(parent) {
     mainLay->addLayout(btnLay);
 
     connect(ok, &QPushButton::clicked, this, [this]() {
+        SettingsManager::instance().saveAddEditWindowGeometry(this);
+
         if (m_nameEdit->text().trimmed().isEmpty()) {
             // simple validation: require name
             m_nameEdit->setFocus();
@@ -106,7 +107,6 @@ CropEditDialog::CropEditDialog(QWidget* parent) : QDialog(parent) {
         if (!checkRange(m_hasPlant, m_plantStart, m_plantEnd, "Plant")) return;
         if (!checkRange(m_hasHarvest, m_harvestStart, m_harvestEnd, "Harvest")) return;
 
-        SettingsManager::instance().saveAddEditWindowGeometry(this);
         accept();
     });
     connect(cancel, &QPushButton::clicked, this, &QDialog::reject);
@@ -117,12 +117,22 @@ CropEditDialog::CropEditDialog(QWidget* parent) : QDialog(parent) {
     m_hasHarvest->setChecked(true);
 }
 
-
 void CropEditDialog::showEvent(QShowEvent* event) {
-    QDialog::showEvent(event);
     SettingsManager::instance().loadAddEditWindowGeometry(this);
+    QDialog::showEvent(event);
 }
 
+void CropEditDialog::closeEvent(QCloseEvent* event) {
+    SettingsManager::instance().saveAddEditWindowGeometry(this);
+    QDialog::closeEvent(event);
+}
+
+/*
+void CropEditDialog::resizeEvent(QResizeEvent* event) {
+    SettingsManager::instance().saveAddEditWindowGeometry(this);
+    QDialog::resizeEvent(event);
+}
+*/
 
 void CropEditDialog::setCrop(const CropWindow& c) {
     m_nameEdit->setText(c.name);

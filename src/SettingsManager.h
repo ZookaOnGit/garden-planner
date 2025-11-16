@@ -12,7 +12,7 @@ public:
     // Get the global singleton instance
     static SettingsManager& instance();
     
-    void saveAddEditWindowGeometry(QWidget* w);
+    void saveAddEditWindowGeometry(QWidget* w);    
     void loadAddEditWindowGeometry(QWidget* w);
 
 private:

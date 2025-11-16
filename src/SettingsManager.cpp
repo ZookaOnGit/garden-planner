@@ -4,6 +4,8 @@
 #include <QSqlQuery>
 #include <QSqlError>
 #include <QDebug>
+#include <QWidget>
+#include <QRect>
 
 SettingsManager& SettingsManager::instance() {
     static SettingsManager s_instance("garden.db");
@@ -57,43 +59,28 @@ void SettingsManager::setValue(const QString& key, const QString& value) {
 }
 
 void SettingsManager::saveAddEditWindowGeometry(QWidget* w) {
-    // Save position and size separately for better compatibility
-    QPoint pos = w->pos();
-    QSize size = w->size();
-    
-    qDebug() << "Saving dialog - Pos:" << pos << "Size:" << size;
-    
-    setValue("addedit_window_x", QString::number(pos.x()));
-    setValue("addedit_window_y", QString::number(pos.y()));
-    setValue("addedit_window_width", QString::number(size.width()));
-    setValue("addedit_window_height", QString::number(size.height()));
-    
-    qDebug() << "Dialog geometry saved";
+
+    QRect rect = w->geometry();  // Gives position and size
+    qDebug() << "x:" << rect.x()
+            << "y:" << rect.y()
+            << "width:" << rect.width()
+            << "height:" << rect.height();
+
+    const QByteArray blob = w->saveGeometry();
+    setValue("addedit_window_geometry", QString(blob.toBase64()));    
 }
 
 void SettingsManager::loadAddEditWindowGeometry(QWidget* w) {
-    QString xStr = getValue("addedit_window_x");
-    QString yStr = getValue("addedit_window_y");
-    QString widthStr = getValue("addedit_window_width");
-    QString heightStr = getValue("addedit_window_height");
-    
-    qDebug() << "Loading dialog - x:" << xStr << "y:" << yStr << "w:" << widthStr << "h:" << heightStr;
-    
-    if (!xStr.isEmpty() && !yStr.isEmpty() && !widthStr.isEmpty() && !heightStr.isEmpty()) {
-        bool ok_x, ok_y, ok_w, ok_h;
-        int x = xStr.toInt(&ok_x);
-        int y = yStr.toInt(&ok_y);
-        int width = widthStr.toInt(&ok_w);
-        int height = heightStr.toInt(&ok_h);
-        
-        if (ok_x && ok_y && ok_w && ok_h) {
-            w->move(x, y);
-            w->resize(width, height);
-            qDebug() << "Dialog geometry restored to" << QRect(x, y, width, height);
-        } else {
-            qWarning() << "Failed to parse dialog geometry values";
-        }
-    } else {
-        qDebug() << "No saved dialog geometry found";
+
+    QRect rect = w->geometry();  // Gives position and size
+    qDebug() << "x:" << rect.x()
+            << "y:" << rect.y()
+            << "width:" << rect.width()
+            << "height:" << rect.height();
+
+    const QString encoded = getValue("addedit_window_geometry");
+    if (!encoded.isEmpty()) {
+        const QByteArray blob = QByteArray::fromBase64(encoded.toUtf8());
+        w->restoreGeometry(blob);
     }
 }

@@ -39,8 +39,8 @@ public:
 
 protected:
     void showEvent(QShowEvent* event) override;
-    //void closeEvent(QCloseEvent* event) override;
-
+    void closeEvent(QCloseEvent* event) override;
+    //void resizeEvent(QResizeEvent* event) override;
 
 private:
     bool m_restored = false;
