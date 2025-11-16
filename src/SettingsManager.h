@@ -6,6 +6,8 @@
 #include <QPoint>
 #include <QWidget>
 #include <QRect>
+#include <QMainWindow>
+#include <QSplitter>
 
 class SettingsManager {
 public:
@@ -14,6 +16,10 @@ public:
     
     void saveAddEditWindowGeometry(QWidget* w);    
     void loadAddEditWindowGeometry(QWidget* w);
+    void saveMainWindowGeometry(QMainWindow* mw);
+    void loadMainWindowGeometry(QMainWindow* mw);
+    void saveMainSplitterState(QSplitter* s);
+    void loadMainSplitterState(QSplitter* s);
 
 private:
     // Private constructor for singleton

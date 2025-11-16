@@ -5,6 +5,7 @@
 #include <QSqlQuery>
 #include <QSqlError>
 #include <QMessageBox>
+#include <QMainWindow>
 
 #include "GanttChartWidget.h"
 #include "LeftColumnWidget.h"
@@ -19,11 +20,11 @@
 #include <QWidget>
 #include <QMessageBox>
 #include <memory>
+#include "SettingsManager.h"
 
 int main(int argc, char *argv[]) {
     QApplication app(argc, argv);
-    app->setApplicationName("Garden Planner");
-    
+        
     QSqlDatabase db = QSqlDatabase::addDatabase("QSQLITE");
     db.setDatabaseName("garden.db");
     if (!db.open()) {
@@ -127,8 +128,17 @@ int main(int argc, char *argv[]) {
         if (rightV->value() != v) rightV->setValue(v);
     });
 
-    splitter->resize(1100, 600);
-    splitter->show();
+    //splitter->resize(1100, 600);
+    //splitter->show();
+
+    QMainWindow mainWindow;
+    mainWindow.setWindowTitle("Garden Planner");
+    mainWindow.setCentralWidget(splitter);
+    mainWindow.resize(1100, 600);
+    SettingsManager::instance().loadMainWindowGeometry(&mainWindow);
+    SettingsManager::instance().loadMainSplitterState(splitter);
+    mainWindow.show();
+
 
     // Helper to reload the crops from DB and update widgets
     auto reload = [itemsPtr, left, chart]() {
@@ -226,6 +236,14 @@ int main(int argc, char *argv[]) {
         if (target > h->maximum()) target = h->maximum();
         h->setValue(target);
     });
+
+
+    // Before exiting (connect to aboutToQuit or do it after app.exec())
+    QObject::connect(&app, &QApplication::aboutToQuit, [&]() {
+        SettingsManager::instance().saveMainWindowGeometry(&mainWindow);
+        SettingsManager::instance().saveMainSplitterState(splitter);
+    });
+
 
     return app.exec();
 }

@@ -54,12 +54,12 @@ void SettingsManager::setValue(const QString& key, const QString& value) {
     if (!q.exec()) {
         qWarning() << "Insert failed:" << q.lastError().text();
     } else {
-        qDebug() << "Successfully saved" << key;
+        qDebug() << "Successfully saved" << key << "to settings.";
     }
 }
 
 void SettingsManager::saveAddEditWindowGeometry(QWidget* w) {
-
+    qDebug() << "Saving add/edit window geometry";
     QRect rect = w->geometry();  // Gives position and size
     qDebug() << "x:" << rect.x()
             << "y:" << rect.y()
@@ -71,7 +71,7 @@ void SettingsManager::saveAddEditWindowGeometry(QWidget* w) {
 }
 
 void SettingsManager::loadAddEditWindowGeometry(QWidget* w) {
-
+    qDebug() << "Loading add/edit window geometry";
     QRect rect = w->geometry();  // Gives position and size
     qDebug() << "x:" << rect.x()
             << "y:" << rect.y()
@@ -82,5 +82,47 @@ void SettingsManager::loadAddEditWindowGeometry(QWidget* w) {
     if (!encoded.isEmpty()) {
         const QByteArray blob = QByteArray::fromBase64(encoded.toUtf8());
         w->restoreGeometry(blob);
+    }
+}
+
+void SettingsManager::saveMainWindowGeometry(QMainWindow* mw) {
+    qDebug() << "Saving main window geometry";
+    QRect rect = mw->geometry();  // Gives position and size
+    qDebug() << "x:" << rect.x()
+            << "y:" << rect.y()
+            << "width:" << rect.width()
+            << "height:" << rect.height();
+
+    const QByteArray blob = mw->saveGeometry();
+    setValue("main_window_geometry", QString(blob.toBase64()));    
+}
+
+void SettingsManager::loadMainWindowGeometry(QMainWindow* mw) {
+    qDebug() << "Loading main window geometry";
+    QRect rect = mw->geometry();  // Gives position and size
+    qDebug() << "x:" << rect.x()
+            << "y:" << rect.y()
+            << "width:" << rect.width()
+            << "height:" << rect.height();
+
+    const QString encoded = getValue("addedit_window_geometry");
+    if (!encoded.isEmpty()) {
+        const QByteArray blob = QByteArray::fromBase64(encoded.toUtf8());
+        mw->restoreGeometry(blob);
+    }
+}
+
+void SettingsManager::saveMainSplitterState(QSplitter* s) {
+    qDebug() << "Saving main splitter state";
+    const QByteArray blob = s->saveState();
+    setValue("main_splitter_state", QString(blob.toBase64()));    
+}
+
+void SettingsManager::loadMainSplitterState(QSplitter* s) {
+    qDebug() << "Loading main splitter state";
+    const QString encoded = getValue("main_splitter_state");
+    if (!encoded.isEmpty()) {
+        const QByteArray blob = QByteArray::fromBase64(encoded.toUtf8());
+        s->restoreState(blob);
     }
 }
