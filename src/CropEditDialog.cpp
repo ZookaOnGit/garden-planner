@@ -21,9 +21,9 @@ CropEditDialog::CropEditDialog(QWidget* parent) : QDialog(parent) {
         m_sowEnd->setCalendarPopup(true);
         m_sowStart->setDisplayFormat("yyyy-MM-dd");
         m_sowEnd->setDisplayFormat("yyyy-MM-dd");
-            // Default dates to today so when adding/editing they show a sensible value
-            m_sowStart->setDate(QDate::currentDate());
-            m_sowEnd->setDate(QDate::currentDate());
+        // Default dates to today so when adding/editing they show a sensible value
+        m_sowStart->setDate(QDate::currentDate());
+        m_sowEnd->setDate(QDate::currentDate());
         h->addWidget(m_hasSow);
         h->addWidget(m_sowStart);
         h->addWidget(m_sowEnd);
@@ -78,8 +78,16 @@ CropEditDialog::CropEditDialog(QWidget* parent) : QDialog(parent) {
     auto* btnLay = new QHBoxLayout;
     auto* ok = new QPushButton("OK");
     auto* cancel = new QPushButton("Cancel");
+    ok->setMinimumWidth(80);
+    cancel->setMinimumWidth(80);
+    ok->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+    cancel->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+
+    btnLay->addStretch();
     btnLay->addWidget(ok);
+    btnLay->addSpacing(12);        // optional: space between buttons
     btnLay->addWidget(cancel);
+    btnLay->addStretch();
     mainLay->addLayout(btnLay);
 
     connect(ok, &QPushButton::clicked, this, [this]() {
