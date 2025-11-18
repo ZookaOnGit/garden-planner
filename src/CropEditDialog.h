@@ -51,14 +51,17 @@ private:
     QCheckBox* m_hasSow = nullptr;
     QDateEdit* m_sowStart = nullptr;
     QDateEdit* m_sowEnd = nullptr;
+    QLabel* m_sowDays = nullptr;
 
     QCheckBox* m_hasPlant = nullptr;
     QDateEdit* m_plantStart = nullptr;
     QDateEdit* m_plantEnd = nullptr;
+    QLabel* m_plantDays = nullptr;
 
     QCheckBox* m_hasHarvest = nullptr;
     QDateEdit* m_harvestStart = nullptr;
     QDateEdit* m_harvestEnd = nullptr;
+    QLabel* m_harvestDays = nullptr;
 
     int m_originalId = -1;
 };

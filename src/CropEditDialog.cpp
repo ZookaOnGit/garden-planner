@@ -21,12 +21,18 @@ CropEditDialog::CropEditDialog(QWidget* parent) : QDialog(parent) {
         m_sowEnd->setCalendarPopup(true);
         m_sowStart->setDisplayFormat("yyyy-MM-dd");
         m_sowEnd->setDisplayFormat("yyyy-MM-dd");
+
+        const int n = m_sowStart->date().daysTo(m_sowEnd->date());
+        m_sowDays = new QLabel(tr("%1 %2").arg(n).arg(n == 1 ? tr("day") : tr("days")));
+
         // Default dates to today so when adding/editing they show a sensible value
         m_sowStart->setDate(QDate::currentDate());
         m_sowEnd->setDate(QDate::currentDate());
+
         h->addWidget(m_hasSow);
         h->addWidget(m_sowStart);
         h->addWidget(m_sowEnd);
+        h->addWidget(m_sowDays);
         form->addRow(h);
     }
 
@@ -40,11 +46,16 @@ CropEditDialog::CropEditDialog(QWidget* parent) : QDialog(parent) {
         m_plantEnd->setCalendarPopup(true);
         m_plantStart->setDisplayFormat("yyyy-MM-dd");
         m_plantEnd->setDisplayFormat("yyyy-MM-dd");
-            m_plantStart->setDate(QDate::currentDate());
-            m_plantEnd->setDate(QDate::currentDate());
+
+        const int n = m_plantStart->date().daysTo(m_plantEnd->date());
+        m_plantDays = new QLabel(tr("%1 %2").arg(n).arg(n == 1 ? tr("day") : tr("days")));
+
+        m_plantStart->setDate(QDate::currentDate());
+        m_plantEnd->setDate(QDate::currentDate());
         h->addWidget(m_hasPlant);
         h->addWidget(m_plantStart);
         h->addWidget(m_plantEnd);
+        h->addWidget(m_plantDays);
         form->addRow(h);
     }
 
@@ -58,11 +69,16 @@ CropEditDialog::CropEditDialog(QWidget* parent) : QDialog(parent) {
         m_harvestEnd->setCalendarPopup(true);
         m_harvestStart->setDisplayFormat("yyyy-MM-dd");
         m_harvestEnd->setDisplayFormat("yyyy-MM-dd");
-            m_harvestStart->setDate(QDate::currentDate());
-            m_harvestEnd->setDate(QDate::currentDate());
+
+        const int n = m_harvestStart->date().daysTo(m_harvestEnd->date());
+        m_harvestDays = new QLabel(tr("%1 %2").arg(n).arg(n == 1 ? tr("day") : tr("days")));
+
+        m_harvestStart->setDate(QDate::currentDate());
+        m_harvestEnd->setDate(QDate::currentDate());
         h->addWidget(m_hasHarvest);
         h->addWidget(m_harvestStart);
         h->addWidget(m_harvestEnd);
+        h->addWidget(m_harvestDays);
         form->addRow(h);
     }
 
@@ -158,6 +174,9 @@ void CropEditDialog::setCrop(const CropWindow& c) {
         m_sowEnd->setDate(QDate::currentDate());
     }
 
+    int n = m_sowStart->date().daysTo(m_sowEnd->date());
+    m_sowDays->setText(tr("%1 %2").arg(n).arg(n == 1 ? tr("day") : tr("days")));
+
     if (c.plantStart.isValid() || c.plantEnd.isValid()) {
         m_hasPlant->setChecked(true);
         if (c.plantStart.isValid()) m_plantStart->setDate(c.plantStart);
@@ -170,6 +189,9 @@ void CropEditDialog::setCrop(const CropWindow& c) {
         m_plantEnd->setDate(QDate::currentDate());
     }
 
+    n = m_plantStart->date().daysTo(m_plantEnd->date());
+    m_plantDays->setText(tr("%1 %2").arg(n).arg(n == 1 ? tr("day") : tr("days")));
+
     if (c.harvestStart.isValid() || c.harvestEnd.isValid()) {
         m_hasHarvest->setChecked(true);
         if (c.harvestStart.isValid()) m_harvestStart->setDate(c.harvestStart);
@@ -181,6 +203,9 @@ void CropEditDialog::setCrop(const CropWindow& c) {
         m_harvestStart->setDate(QDate::currentDate());
         m_harvestEnd->setDate(QDate::currentDate());
     }
+
+    n = m_harvestStart->date().daysTo(m_harvestEnd->date());
+    m_harvestDays->setText(tr("%1 %2").arg(n).arg(n == 1 ? tr("day") : tr("days")));
 }
 
 CropWindow CropEditDialog::crop() const {
