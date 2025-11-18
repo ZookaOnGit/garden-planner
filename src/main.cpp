@@ -43,13 +43,14 @@ int main(int argc, char *argv[]) {
                               "plant_end TEXT,"
                               "harvest_start TEXT,"
                               "harvest_end TEXT"
+                              "notes TEXT"
                               ")")) {
         QMessageBox::critical(nullptr, "DB Error", 
                             QString("Failed to create crops table: %1").arg(createTableQuery.lastError().text()));
         return 1;
     }
 
-    QSqlQuery query("SELECT id, name, sow_start, sow_end, plant_start, plant_end, harvest_start, harvest_end FROM crops");
+    QSqlQuery query("SELECT id, name, sow_start, sow_end, plant_start, plant_end, harvest_start, harvest_end, notes FROM crops");
     if (!query.isActive()) {
         QMessageBox::critical(nullptr, "Query Error", query.lastError().text());
         return 1;
@@ -135,14 +136,15 @@ int main(int argc, char *argv[]) {
     mainWindow.setWindowTitle("Garden Planner");
     mainWindow.setCentralWidget(splitter);
     mainWindow.resize(1100, 600);
-    SettingsManager::instance().loadMainWindowGeometry(&mainWindow);
-    SettingsManager::instance().loadMainSplitterState(splitter);
+    // TODO: not working
+    //SettingsManager::instance().loadMainWindowGeometry(&mainWindow);
+    //SettingsManager::instance().loadMainSplitterState(splitter);
     mainWindow.show();
 
 
     // Helper to reload the crops from DB and update widgets
     auto reload = [itemsPtr, left, chart]() {
-    QSqlQuery q("SELECT id, name, sow_start, sow_end, plant_start, plant_end, harvest_start, harvest_end FROM crops");
+    QSqlQuery q("SELECT id, name, sow_start, sow_end, plant_start, plant_end, harvest_start, harvest_end, notes FROM crops");
         if (!q.isActive()) return false;
         *itemsPtr = loadCropsFromQuery(q);
         left->setItems(*itemsPtr);
@@ -156,9 +158,10 @@ int main(int argc, char *argv[]) {
         if (dlg.exec() == QDialog::Accepted) {
             CropWindow c = dlg.crop();
             QSqlQuery ins;
-            ins.prepare("INSERT INTO crops(name, sow_start, sow_end, plant_start, plant_end, harvest_start, harvest_end)"
-                        " VALUES(:name, :sow_start, :sow_end, :plant_start, :plant_end, :harvest_start, :harvest_end)");
+            ins.prepare("INSERT INTO crops(name, sow_start, sow_end, plant_start, plant_end, harvest_start, harvest_end, notes)"
+                        " VALUES(:name, :sow_start, :sow_end, :plant_start, :plant_end, :harvest_start, :harvest_end, :notes)");
             ins.bindValue(":name", c.name);
+            ins.bindValue(":notes", c.notes);
             auto bindDateOrNull = [&](const QDate& d){ return d.isValid() ? QVariant(d.toString("yyyy-MM-dd")) : QVariant(); };
             ins.bindValue(":sow_start", bindDateOrNull(c.sowStart));
             ins.bindValue(":sow_end",   bindDateOrNull(c.sowEnd));
@@ -187,9 +190,10 @@ int main(int argc, char *argv[]) {
             QSqlQuery up;
             up.prepare("UPDATE crops SET name = :name, sow_start = :sow_start, sow_end = :sow_end,"
                        " plant_start = :plant_start, plant_end = :plant_end,"
-                       " harvest_start = :harvest_start, harvest_end = :harvest_end"
+                       " harvest_start = :harvest_start, harvest_end = :harvest_end, notes = :notes"
                        " WHERE id = :id");
             up.bindValue(":name", c.name);
+            up.bindValue(":notes", c.notes);
             auto bindDateOrNull = [&](const QDate& d){ return d.isValid() ? QVariant(d.toString("yyyy-MM-dd")) : QVariant(); };
             up.bindValue(":sow_start", bindDateOrNull(c.sowStart));
             up.bindValue(":sow_end",   bindDateOrNull(c.sowEnd));
@@ -237,13 +241,10 @@ int main(int argc, char *argv[]) {
         h->setValue(target);
     });
 
-
-    // Before exiting (connect to aboutToQuit or do it after app.exec())
     QObject::connect(&app, &QApplication::aboutToQuit, [&]() {
         SettingsManager::instance().saveMainWindowGeometry(&mainWindow);
         SettingsManager::instance().saveMainSplitterState(splitter);
     });
-
 
     return app.exec();
 }

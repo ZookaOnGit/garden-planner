@@ -12,11 +12,11 @@ inline QVector<CropWindow> loadCropsFromQuery(QSqlQuery& query) {
     while (query.next()) {
         CropWindow c;
         // Expecting query to provide columns: id, name, sow_start, sow_end,
-        // plant_start, plant_end, harvest_start, harvest_end
+        // plant_start, plant_end, harvest_start, harvest_end, notes
         // For backward compatibility, if id is missing, treat it as -1.
         int colCount = query.record().count();
         int idx = 0;
-        if (colCount >= 8) {
+        if (colCount >= 9) {
             c.id = query.value(idx++).toInt();
         } else {
             c.id = -1;
@@ -28,6 +28,7 @@ inline QVector<CropWindow> loadCropsFromQuery(QSqlQuery& query) {
         c.plantEnd     = query.value(idx++).toDate();
         c.harvestStart = query.value(idx++).toDate();
         c.harvestEnd   = query.value(idx++).toDate();
+        c.notes        = query.value(idx++).toString();
 
         auto fix = [](QDate& a, QDate& b){
             if (a.isValid() && b.isValid() && a > b) std::swap(a,b);

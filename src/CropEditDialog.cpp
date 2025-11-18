@@ -4,13 +4,24 @@
 
 CropEditDialog::CropEditDialog(QWidget* parent) : QDialog(parent) {
     setWindowTitle("Add / Edit Crop");
+    setMinimumSize(500, 400);
     
     auto* mainLay = new QVBoxLayout(this);
 
     auto* form = new QFormLayout;
     m_nameEdit = new QLineEdit;
     form->addRow("Name:", m_nameEdit);
+    auto* daysValidator = new QIntValidator(0, 100000, this); // for the days fields
 
+    // Labels
+    {
+        auto* h = new QHBoxLayout;
+        h->addWidget(new QLabel(""));
+        h->addWidget(new QLabel("Start"));
+        h->addWidget(new QLabel("End"));
+        h->addWidget(new QLabel("Duration"));
+        form->addRow(h);
+    }
     // Sow
     {
         auto* h = new QHBoxLayout;
@@ -21,18 +32,20 @@ CropEditDialog::CropEditDialog(QWidget* parent) : QDialog(parent) {
         m_sowEnd->setCalendarPopup(true);
         m_sowStart->setDisplayFormat("yyyy-MM-dd");
         m_sowEnd->setDisplayFormat("yyyy-MM-dd");
-
-        const int n = m_sowStart->date().daysTo(m_sowEnd->date());
-        m_sowDays = new QLabel(tr("%1 %2").arg(n).arg(n == 1 ? tr("day") : tr("days")));
-
-        // Default dates to today so when adding/editing they show a sensible value
         m_sowStart->setDate(QDate::currentDate());
         m_sowEnd->setDate(QDate::currentDate());
-
+        m_sowDays = new QLineEdit;
+        m_sowDays->setValidator(daysValidator);
+        m_sowDays->setPlaceholderText(tr("0"));
+        m_sowDays->setAlignment(Qt::AlignRight);
+        m_sowDays->setMinimumWidth(5);
+        m_sowDays->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+        m_sowDaysLabel = new QLabel;
         h->addWidget(m_hasSow);
         h->addWidget(m_sowStart);
         h->addWidget(m_sowEnd);
         h->addWidget(m_sowDays);
+        h->addWidget(m_sowDaysLabel);
         form->addRow(h);
     }
 
@@ -46,16 +59,20 @@ CropEditDialog::CropEditDialog(QWidget* parent) : QDialog(parent) {
         m_plantEnd->setCalendarPopup(true);
         m_plantStart->setDisplayFormat("yyyy-MM-dd");
         m_plantEnd->setDisplayFormat("yyyy-MM-dd");
-
-        const int n = m_plantStart->date().daysTo(m_plantEnd->date());
-        m_plantDays = new QLabel(tr("%1 %2").arg(n).arg(n == 1 ? tr("day") : tr("days")));
-
         m_plantStart->setDate(QDate::currentDate());
         m_plantEnd->setDate(QDate::currentDate());
+        m_plantDays = new QLineEdit;
+        m_plantDays->setValidator(daysValidator);
+        m_plantDays->setPlaceholderText(tr("0"));
+        m_plantDays->setAlignment(Qt::AlignRight);
+        m_plantDays->setMinimumWidth(5);
+        m_plantDays->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+        m_plantDaysLabel = new QLabel;
         h->addWidget(m_hasPlant);
         h->addWidget(m_plantStart);
         h->addWidget(m_plantEnd);
         h->addWidget(m_plantDays);
+        h->addWidget(m_plantDaysLabel);
         form->addRow(h);
     }
 
@@ -69,16 +86,20 @@ CropEditDialog::CropEditDialog(QWidget* parent) : QDialog(parent) {
         m_harvestEnd->setCalendarPopup(true);
         m_harvestStart->setDisplayFormat("yyyy-MM-dd");
         m_harvestEnd->setDisplayFormat("yyyy-MM-dd");
-
-        const int n = m_harvestStart->date().daysTo(m_harvestEnd->date());
-        m_harvestDays = new QLabel(tr("%1 %2").arg(n).arg(n == 1 ? tr("day") : tr("days")));
-
         m_harvestStart->setDate(QDate::currentDate());
         m_harvestEnd->setDate(QDate::currentDate());
+        m_harvestDays = new QLineEdit;
+        m_harvestDays->setValidator(daysValidator);
+        m_harvestDays->setPlaceholderText(tr("0"));
+        m_harvestDays->setAlignment(Qt::AlignRight);        
+        m_harvestDays->setMinimumWidth(5);
+        m_harvestDays->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+        m_harvestDaysLabel = new QLabel;
         h->addWidget(m_hasHarvest);
         h->addWidget(m_harvestStart);
         h->addWidget(m_harvestEnd);
         h->addWidget(m_harvestDays);
+        h->addWidget(m_harvestDaysLabel);
         form->addRow(h);
     }
 
@@ -101,11 +122,69 @@ CropEditDialog::CropEditDialog(QWidget* parent) : QDialog(parent) {
 
     btnLay->addStretch();
     btnLay->addWidget(ok);
-    btnLay->addSpacing(12);        // optional: space between buttons
+    btnLay->addSpacing(12);
     btnLay->addWidget(cancel);
     btnLay->addStretch();
     mainLay->addLayout(btnLay);
 
+    // update days count when dates fields change
+    auto updateDays = [this]() {
+        qDebug() << "updating days labels";
+        int n = m_sowStart->date().daysTo(m_sowEnd->date());
+        m_sowDays->setText(tr("%1").arg(n));
+        m_sowDaysLabel->setText(tr("%1").arg(n == 1 ? tr("day") : tr("days")));
+
+        n = m_plantStart->date().daysTo(m_plantEnd->date());
+        m_plantDays->setText(tr("%1").arg(n));
+        m_plantDaysLabel->setText(tr("%1").arg(n == 1 ? tr("day") : tr("days")));
+
+        n = m_harvestStart->date().daysTo(m_harvestEnd->date());
+        m_harvestDays->setText(tr("%1").arg(n));
+        m_harvestDaysLabel->setText(tr("%1").arg(n == 1 ? tr("day") : tr("days")));
+    };
+    connect(m_sowStart, &QDateEdit::dateChanged, this, updateDays);
+    connect(m_sowEnd, &QDateEdit::dateChanged, this, updateDays);
+    connect(m_plantStart, &QDateEdit::dateChanged, this, updateDays);
+    connect(m_plantEnd, &QDateEdit::dateChanged, this, updateDays);
+    connect(m_harvestStart, &QDateEdit::dateChanged, this, updateDays);
+    connect(m_harvestEnd, &QDateEdit::dateChanged, this, updateDays);
+    updateDays();
+
+    // update end date calendar when days field changes
+    auto updateEndDate = [this](QLineEdit* daysEdit, QDateEdit* startEdit, QDateEdit* endEdit) {
+        if (daysEdit->text().isEmpty()) {
+            QSignalBlocker blocker(endEdit);
+            daysEdit->setText("0");
+            endEdit->setDate(startEdit->date());
+            daysEdit->selectAll();
+            return;
+        }
+
+        bool ok = false;
+        int days = daysEdit->text().toInt(&ok);
+        if (ok) {
+            QSignalBlocker blocker(endEdit); // prevent recursion
+            QDate newEnd = startEdit->date().addDays(days);
+            endEdit->setDate(newEnd);
+        }
+        else {
+            // reset to start date if invalid, validator should prevent this
+            endEdit->setDate(startEdit->date());
+            return;
+        }
+    };
+    connect(m_sowDays, &QLineEdit::textChanged, this, [this, updateEndDate]() {
+        updateEndDate(m_sowDays, m_sowStart, m_sowEnd);
+    });
+    connect(m_plantDays, &QLineEdit::textChanged, this, [this, updateEndDate]() {
+        updateEndDate(m_plantDays, m_plantStart, m_plantEnd);
+    });
+    connect(m_harvestDays, &QLineEdit::textChanged, this, [this, updateEndDate]() {
+        updateEndDate(m_harvestDays, m_harvestStart, m_harvestEnd);
+    });
+
+
+    // validate and save on OK
     connect(ok, &QPushButton::clicked, this, [this]() {
         SettingsManager::instance().saveAddEditWindowGeometry(this);
 
@@ -174,9 +253,6 @@ void CropEditDialog::setCrop(const CropWindow& c) {
         m_sowEnd->setDate(QDate::currentDate());
     }
 
-    int n = m_sowStart->date().daysTo(m_sowEnd->date());
-    m_sowDays->setText(tr("%1 %2").arg(n).arg(n == 1 ? tr("day") : tr("days")));
-
     if (c.plantStart.isValid() || c.plantEnd.isValid()) {
         m_hasPlant->setChecked(true);
         if (c.plantStart.isValid()) m_plantStart->setDate(c.plantStart);
@@ -188,9 +264,6 @@ void CropEditDialog::setCrop(const CropWindow& c) {
         m_plantStart->setDate(QDate::currentDate());
         m_plantEnd->setDate(QDate::currentDate());
     }
-
-    n = m_plantStart->date().daysTo(m_plantEnd->date());
-    m_plantDays->setText(tr("%1 %2").arg(n).arg(n == 1 ? tr("day") : tr("days")));
 
     if (c.harvestStart.isValid() || c.harvestEnd.isValid()) {
         m_hasHarvest->setChecked(true);
@@ -204,13 +277,13 @@ void CropEditDialog::setCrop(const CropWindow& c) {
         m_harvestEnd->setDate(QDate::currentDate());
     }
 
-    n = m_harvestStart->date().daysTo(m_harvestEnd->date());
-    m_harvestDays->setText(tr("%1 %2").arg(n).arg(n == 1 ? tr("day") : tr("days")));
+    m_notesEdit->setText(c.notes);
 }
 
 CropWindow CropEditDialog::crop() const {
     CropWindow c;
     c.name = m_nameEdit->text().trimmed();
+    c.notes = m_notesEdit->toPlainText().trimmed();
 
     if (m_hasSow->isChecked()) {
         c.sowStart = m_sowStart->date();
