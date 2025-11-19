@@ -37,7 +37,7 @@ private:
 
     // Layout
     int m_leftMargin  = 160;
-    int m_topMargin   = 60;
+    int m_topMargin   = 40;
     int m_rightMargin = 24;
 
     // 3 lanes per crop

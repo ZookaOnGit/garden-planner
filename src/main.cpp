@@ -101,12 +101,6 @@ int main(int argc, char *argv[]) {
     splitter->addWidget(scroller);
     splitter->setChildrenCollapsible(false);
 
-    // Set initial sizes: left based on content, right gets the rest.
-    //int leftPref = left->preferredWidth();
-    //QList<int> sizes;
-    //sizes << leftPref << 1000;
-    //splitter->setSizes(sizes);
-
     // When the splitter is moved, update both widgets' left width so
     // labels/grid remain aligned.
     QObject::connect(splitter, &QSplitter::splitterMoved, [left, chart](int pos, int){

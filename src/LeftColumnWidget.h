@@ -37,7 +37,7 @@ private:
 
     // Keep layout constants in sync with GanttChartWidget
     int m_leftMargin  = 160;
-    int m_topMargin   = 60;
+    int m_topMargin   = 40;
     int m_subRowHeight = 20;
     int m_subRowGap    = 4;
     int m_blockGap     = 10;

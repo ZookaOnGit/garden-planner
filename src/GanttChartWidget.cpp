@@ -141,7 +141,6 @@ void GanttChartWidget::paintEvent(QPaintEvent*) {
     drawGrid(p);
     drawHeader(p);
     drawBars(p);
-    // Draw week lines on top of bars so they remain visible.
     drawWeekLines(p);
 }
 
@@ -191,7 +190,7 @@ void GanttChartWidget::drawHeader(QPainter& p) {
             p.setPen(pen);
             p.drawLine(tx, m_topMargin, tx, height());
             p.setPen(Theme::TodayLine);
-            p.drawText(tx-15, m_topMargin-40, "Today");
+            //p.drawText(tx-15, m_topMargin-40, "Today");
         }
     }
 }

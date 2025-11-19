@@ -81,26 +81,6 @@ void LeftColumnWidget::paintEvent(QPaintEvent*) {
 
     QFontMetrics fm(prevFont);
 
-    // Draw legend at the top of the left column
-    p.save();
-    int lx = 8;
-    int ly = 8;
-    const int box = 12;
-    const int spacing = 20;
-    auto chip = [&](const QColor& color, const QString& text){
-        p.setPen(QPen(Theme::BarOutline, 1));
-        p.setBrush(QBrush(color, Qt::SolidPattern));
-        p.drawRect(lx, ly, box, box);
-        p.setPen(Theme::TextPrimary);
-        p.setBrush(Qt::NoBrush);
-        p.drawText(lx + box + 6, ly + box - 2, text);
-        lx += p.fontMetrics().horizontalAdvance(text) + box + spacing;
-    };
-    chip(Theme::Sow, QStringLiteral("Sow"));
-    chip(Theme::Plant, QStringLiteral("Plant"));
-    chip(Theme::Harvest, QStringLiteral("Harvest"));
-    p.restore();
-
     for (int i = 0; i < m_items.size(); ++i) {
         const auto& c = m_items[i];
         p.setPen(Theme::TextDark);
