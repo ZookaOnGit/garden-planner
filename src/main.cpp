@@ -102,10 +102,10 @@ int main(int argc, char *argv[]) {
     splitter->setChildrenCollapsible(false);
 
     // Set initial sizes: left based on content, right gets the rest.
-    int leftPref = left->preferredWidth();
-    QList<int> sizes;
-    sizes << leftPref << 1000;
-    splitter->setSizes(sizes);
+    //int leftPref = left->preferredWidth();
+    //QList<int> sizes;
+    //sizes << leftPref << 1000;
+    //splitter->setSizes(sizes);
 
     // When the splitter is moved, update both widgets' left width so
     // labels/grid remain aligned.
@@ -226,7 +226,7 @@ int main(int argc, char *argv[]) {
     });
 
     // After the UI is shown, scroll the timeline so today's date is centered
-    QTimer::singleShot(0, [scroller, chart]() {
+    QTimer::singleShot(0, [scroller, leftScroller, splitter, left, chart]() {
         int tx = chart->xForDate(QDate::currentDate());
         // Left-align today's date with a 50px left padding
         const int padding = 50;
@@ -235,6 +235,24 @@ int main(int argc, char *argv[]) {
         if (target < h->minimum()) target = h->minimum();
         if (target > h->maximum()) target = h->maximum();
         h->setValue(target);
+
+        const int leftPref = left->preferredWidth();  // your existing API
+        // Ensure the left pane can't be shrunk below the intended label width.
+        left->setColumnWidth(leftPref);
+        left->setMinimumWidth(leftPref);
+        leftScroller->setMinimumWidth(leftPref);
+
+        // Keep chart aligned with the left pane.
+        chart->setLeftMargin(leftPref);
+
+        // Give the right pane the rest of the splitter width.
+        const int total = splitter->width();
+        const int rightPref = std::max(100, total - leftPref);
+        splitter->setSizes({ leftPref, rightPref });
+
+        // Optional: make the right side stretch, left side fixed.
+        splitter->setStretchFactor(0, 0); // left
+        splitter->setStretchFactor(1, 1); // right        
     });
 
     QObject::connect(&app, &QApplication::aboutToQuit, [&]() {
