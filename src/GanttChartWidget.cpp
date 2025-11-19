@@ -1,13 +1,16 @@
 
 #include "GanttChartWidget.h"
-#include <QPainter>
-#include <QFontMetrics>
-#include <QPen>
-#include <QMouseEvent>
-#include <QToolTip>
 #include "Theme.h"
 #include <algorithm>
 #include <limits>
+
+#include <QFontMetrics>
+#include <QImageWriter>
+#include <QMouseEvent>
+#include <QPainter>
+#include <QPen>
+#include <QScrollArea>
+#include <QToolTip>
 
 GanttChartWidget::GanttChartWidget(QWidget* parent) : QWidget(parent) {
     setAutoFillBackground(true);
@@ -190,7 +193,6 @@ void GanttChartWidget::drawHeader(QPainter& p) {
             p.setPen(pen);
             p.drawLine(tx, m_topMargin, tx, height());
             p.setPen(Theme::TodayLine);
-            //p.drawText(tx-15, m_topMargin-40, "Today");
         }
     }
 }
@@ -210,29 +212,6 @@ void GanttChartWidget::drawGrid(QPainter& p) {
         p.setPen(Theme::Separator);
         p.drawLine(0, afterBlockY + m_blockGap, width(), afterBlockY + m_blockGap);
     }
-}
-
-void GanttChartWidget::drawLegend(QPainter& p) {
-    p.save();
-    int x = m_leftMargin;
-    int y = 8;
-    const int box = 12;
-    const int spacing = 30;
-
-    auto chip = [&](const QColor& color, const QString& text){
-        p.setPen(QPen(Theme::BarOutline, 1));
-        p.setBrush(QBrush(color, Qt::SolidPattern));
-        p.drawRect(x, y, box, box);
-        p.setPen(Theme::TextPrimary);
-        p.setBrush(Qt::NoBrush);
-        p.drawText(x + box + 6, y + box - 2, text);
-        x += p.fontMetrics().horizontalAdvance(text) + box + spacing;
-    };
-
-    chip(Theme::Sow,  QStringLiteral("Sow"));
-    chip(Theme::Plant,   QStringLiteral("Plant"));
-    chip(Theme::Harvest,   QStringLiteral("Harvest"));
-    p.restore();
 }
 
 void GanttChartWidget::drawBars(QPainter& p) {

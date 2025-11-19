@@ -1,9 +1,17 @@
-
 #pragma once
 #include "CropWindow.h"
 #include <QWidget>
 #include <QVector>
 #include <QDate>
+#include <QMenu>
+#include <QContextMenuEvent>
+#include <QFileDialog>
+#include <QPainter>
+#include <QGuiApplication>
+#include <QImageWriter>
+#include <QScrollArea>
+
+
 class QPainter;
 
 class GanttChartWidget : public QWidget {
@@ -59,7 +67,6 @@ private:
     void drawHeader(QPainter& p);
     void drawGrid(QPainter& p);
     void drawWeekLines(QPainter& p);
-    void drawLegend(QPainter& p);
     void drawBars(QPainter& p);
 
     static bool isValidRange(const QDate& a, const QDate& b);
