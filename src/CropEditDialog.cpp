@@ -4,14 +4,16 @@
 
 CropEditDialog::CropEditDialog(QWidget* parent) : QDialog(parent) {
     setWindowTitle("Add / Edit Crop");
-    setMinimumSize(500, 400);
+    setMinimumSize(600, 400);
+
+    const int DAYS_FIELD_WIDTH = 70;
     
     auto* mainLay = new QVBoxLayout(this);
 
     auto* form = new QFormLayout;
     m_nameEdit = new QLineEdit;
     form->addRow("Name:", m_nameEdit);
-    auto* daysValidator = new QIntValidator(0, 100000, this); // for the days fields
+    auto* daysValidator = new QIntValidator(0, 10000, this); // for the days fields
 
     // Labels
     {
@@ -20,6 +22,7 @@ CropEditDialog::CropEditDialog(QWidget* parent) : QDialog(parent) {
         h->addWidget(new QLabel("Start"));
         h->addWidget(new QLabel("End"));
         h->addWidget(new QLabel("Duration"));
+        h->addWidget(new QLabel(""));
         form->addRow(h);
     }
     // Sow
@@ -38,7 +41,7 @@ CropEditDialog::CropEditDialog(QWidget* parent) : QDialog(parent) {
         m_sowDays->setValidator(daysValidator);
         m_sowDays->setPlaceholderText(tr("0"));
         m_sowDays->setAlignment(Qt::AlignRight);
-        m_sowDays->setMinimumWidth(5);
+        m_sowDays->setMaximumWidth(DAYS_FIELD_WIDTH);
         m_sowDays->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
         m_sowDaysLabel = new QLabel;
         h->addWidget(m_hasSow);
@@ -65,7 +68,7 @@ CropEditDialog::CropEditDialog(QWidget* parent) : QDialog(parent) {
         m_plantDays->setValidator(daysValidator);
         m_plantDays->setPlaceholderText(tr("0"));
         m_plantDays->setAlignment(Qt::AlignRight);
-        m_plantDays->setMinimumWidth(5);
+        m_plantDays->setMaximumWidth(DAYS_FIELD_WIDTH);
         m_plantDays->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
         m_plantDaysLabel = new QLabel;
         h->addWidget(m_hasPlant);
@@ -92,7 +95,7 @@ CropEditDialog::CropEditDialog(QWidget* parent) : QDialog(parent) {
         m_harvestDays->setValidator(daysValidator);
         m_harvestDays->setPlaceholderText(tr("0"));
         m_harvestDays->setAlignment(Qt::AlignRight);        
-        m_harvestDays->setMinimumWidth(5);
+        m_harvestDays->setMaximumWidth(DAYS_FIELD_WIDTH);
         m_harvestDays->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
         m_harvestDaysLabel = new QLabel;
         h->addWidget(m_hasHarvest);
@@ -129,7 +132,6 @@ CropEditDialog::CropEditDialog(QWidget* parent) : QDialog(parent) {
 
     // update days count when dates fields change
     auto updateDays = [this]() {
-        qDebug() << "updating days labels";
         int n = m_sowStart->date().daysTo(m_sowEnd->date());
         m_sowDays->setText(tr("%1").arg(n));
         m_sowDaysLabel->setText(tr("%1").arg(n == 1 ? tr("day") : tr("days")));
