@@ -15,7 +15,6 @@ public:
     void setDayWidth(int pixelsPerDay);
     void showTodayLine(bool on);
     void showSubrowLabels(bool on);
-    void setDrawLeftColumn(bool show);
     void setLeftMargin(int pixels);
     void setTopMargin(int pixels);
     int topMargin() const;
@@ -49,7 +48,6 @@ private:
     int m_dayWidth   = 4;
     bool m_showToday = true;
     bool m_showSubLabels = true;
-    bool m_drawLeftColumn = true;
     int m_leftWidthOverride = 0; // if >0, use this instead of m_leftMargin for layout
     // last hovered bar (index, lane), (-1,-1) when none
     QPair<int,int> m_lastHover = QPair<int,int>(-1,-1);

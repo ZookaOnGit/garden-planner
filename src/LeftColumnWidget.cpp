@@ -23,8 +23,7 @@ void LeftColumnWidget::setItems(const QVector<CropWindow>& items) {
 void LeftColumnWidget::setColumnWidth(int w) {
     m_leftMargin = std::max(0, w);
     updateGeometry();
-    //setMinimumSize(sizeHint());
-    
+    setMinimumSize(sizeHint());
     update();
 }
 
@@ -97,22 +96,22 @@ void LeftColumnWidget::paintEvent(QPaintEvent*) {
         p.drawText(lx + box + 6, ly + box - 2, text);
         lx += p.fontMetrics().horizontalAdvance(text) + box + spacing;
     };
-    chip(Theme::Sow,  QStringLiteral("Sow"));
-    chip(Theme::Plant,   QStringLiteral("Plant"));
-    chip(Theme::Harvest,   QStringLiteral("Harvest"));
+    chip(Theme::Sow, QStringLiteral("Sow"));
+    chip(Theme::Plant, QStringLiteral("Plant"));
+    chip(Theme::Harvest, QStringLiteral("Harvest"));
     p.restore();
 
     for (int i = 0; i < m_items.size(); ++i) {
         const auto& c = m_items[i];
-    p.setPen(Theme::TextDark);
-    // Draw crop name in bold only for the name itself.
-    QFont nameFont = prevFont; nameFont.setBold(true);
-    QFontMetrics nameFm(nameFont);
-    QString name = nameFm.elidedText(c.name, Qt::ElideRight, m_leftMargin - 12);
-    int nameBaseline = laneTopY(i, 0) + m_subRowHeight - 4;
-    p.setFont(nameFont);
-    p.drawText(8, nameBaseline, name);
-    p.setFont(prevFont);
+        p.setPen(Theme::TextDark);
+        // Draw crop name in bold only for the name itself.
+        QFont nameFont = prevFont; nameFont.setBold(true);
+        QFontMetrics nameFm(nameFont);
+        QString name = nameFm.elidedText(c.name, Qt::ElideRight, m_leftMargin - 12);
+        int nameBaseline = laneTopY(i, 0) + m_subRowHeight - 4;
+        p.setFont(nameFont);
+        p.drawText(8, nameBaseline, name);
+        p.setFont(prevFont);
 
         // subrow labels: draw right-aligned within the left column
         auto drawLaneLabel = [&](int lane, const QString& text){
@@ -127,9 +126,10 @@ void LeftColumnWidget::paintEvent(QPaintEvent*) {
             p.drawText(x, y, text);
             p.setFont(prevFont);
         };
-        drawLaneLabel(0, "Sow");
-        drawLaneLabel(1, "Plant");
-        drawLaneLabel(2, "Harvest");
+
+            drawLaneLabel(0, "Sow");
+            drawLaneLabel(1, "Plant");
+            drawLaneLabel(2, "Harvest");
     }
 }
 

@@ -29,7 +29,7 @@ signals:
     void cropDoubleClicked(int index);
     // Emitted when the user requests deletion of a crop (right-click -> Delete)
     void cropDeleteRequested(int index);
-    // Emitted when user clicks the small + in the header to add a crop
+    // Emitted when user clicks the small + in the header to add a crop or right-click menu
     void addCropRequested();
 
 private:

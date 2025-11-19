@@ -73,8 +73,6 @@ int main(int argc, char *argv[]) {
     chart->setDayWidth(4);
     chart->showTodayLine(true);
     chart->showSubrowLabels(true);
-    // Timeline widget should not draw the left column
-    chart->setDrawLeftColumn(false);
     // Keep the chart's internal left margin in sync with the left column width
     // so labels and grid lines align correctly.
     chart->setLeftMargin(300);
@@ -129,9 +127,6 @@ int main(int argc, char *argv[]) {
         if (rightV->value() != v) rightV->setValue(v);
     });
 
-    //splitter->resize(1100, 600);
-    //splitter->show();
-
     QMainWindow mainWindow;
     mainWindow.setWindowTitle("Garden Planner");
     mainWindow.setCentralWidget(splitter);
@@ -140,6 +135,7 @@ int main(int argc, char *argv[]) {
     //SettingsManager::instance().loadMainWindowGeometry(&mainWindow);
     //SettingsManager::instance().loadMainSplitterState(splitter);
     mainWindow.show();
+
 
 
     // Helper to reload the crops from DB and update widgets

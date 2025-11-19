@@ -17,11 +17,6 @@ GanttChartWidget::GanttChartWidget(QWidget* parent) : QWidget(parent) {
     setMouseTracking(true);
 }
 
-void GanttChartWidget::setDrawLeftColumn(bool show) {
-    m_drawLeftColumn = show;
-    update();
-}
-
 void GanttChartWidget::setLeftMargin(int pixels) {
     m_leftWidthOverride = std::max(0, pixels);
     updateGeometry();
@@ -80,9 +75,7 @@ int GanttChartWidget::laneTopY(int cropIndex, int laneIndex) const {
 
 QSize GanttChartWidget::sizeHint() const {
     int height = m_topMargin + m_items.size() * (blockHeight() + m_blockGap) + 40;
-    int left = 0;
-    if (m_drawLeftColumn) left = (m_leftWidthOverride > 0) ? m_leftWidthOverride : m_leftMargin;
-    int width = left + totalDays() * m_dayWidth + m_rightMargin;
+    int width = totalDays() * m_dayWidth + m_rightMargin;
     return { std::max(width, 800), std::max(height, 400) };
 }
 
@@ -102,8 +95,8 @@ int GanttChartWidget::dateToX(const QDate& d) const {
     if (days64 < lo) days64 = lo;
     if (days64 > hi) days64 = hi;
     int days = static_cast<int>(days64);
-    int left = m_drawLeftColumn ? m_leftMargin : 0;
-    return left + days * m_dayWidth;
+
+    return days * m_dayWidth;
 }
 
 int GanttChartWidget::xForDate(const QDate& d) const {
@@ -157,7 +150,6 @@ void GanttChartWidget::drawHeader(QPainter& p) {
     const int y = m_topMargin - 20;
 
     p.setPen(Theme::TextPrimary);
-    if (m_drawLeftColumn) p.drawText(8, y, "Crop");
 
     QDate d = QDate(m_minDate.year(), m_minDate.month(), 1);
     while (d <= m_maxDate) {
@@ -187,8 +179,7 @@ void GanttChartWidget::drawHeader(QPainter& p) {
     }
 
     p.setPen(Theme::HeaderSeparator);
-    int left = m_drawLeftColumn ? m_leftMargin : 0;
-    p.drawLine(left, m_topMargin-8, dateToX(m_maxDate), m_topMargin-8);
+    p.drawLine(0, m_topMargin-8, dateToX(m_maxDate), m_topMargin-8);
 
     if (m_showToday) {
         QDate today = QDate::currentDate();
@@ -250,27 +241,6 @@ void GanttChartWidget::drawBars(QPainter& p) {
 
     for (int i = 0; i < m_items.size(); ++i) {
         const auto& c = m_items[i];
-
-        // Draw name only if this widget is responsible for the left column.
-        if (m_drawLeftColumn) {
-            p.setPen(Theme::TextDark);
-            QString name = fm.elidedText(c.name, Qt::ElideRight, m_leftMargin - 12);
-            int nameBaseline = laneTopY(i, 0) + m_subRowHeight - 4;
-            p.drawText(8, nameBaseline, name);
-        }
-
-        auto drawLaneLabel = [&](int lane, const QString& text){
-            // Only draw subrow labels in the left column widget.
-            if (!m_showSubLabels || !m_drawLeftColumn) return;
-            p.setPen(Theme::TextMuted);
-            QFont f = p.font(); f.setPointSizeF(std::max(6.0, f.pointSizeF() - 1)); p.setFont(f);
-            int y = laneTopY(i, lane) + m_subRowHeight - 4;
-            p.drawText(50, y, text);
-            p.setFont(QFont());
-        };
-        drawLaneLabel(0, "Sow");
-        drawLaneLabel(1, "Plant");
-        drawLaneLabel(2, "Harvest");
 
         auto drawRangeLane = [&](const QDate& a, const QDate& b, int lane, const QColor& col){
             if (!isValidRange(a,b)) return;
