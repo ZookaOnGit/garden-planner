@@ -30,6 +30,11 @@ public:
 
     // Populate fields from an existing CropWindow
     void setCrop(const CropWindow& c);
+    void updateSowDays();
+    void updateSowEndDate();
+    void updateGerminationDates();
+    void updateHarvestDates();
+
     // Fill a CropWindow from the dialog contents
     CropWindow crop() const;
 
@@ -57,13 +62,15 @@ private:
     QCheckBox* m_hasPlant = nullptr;
     QDateEdit* m_plantStart = nullptr;
     QDateEdit* m_plantEnd = nullptr;
-    QLineEdit* m_plantDays = nullptr;
+    QLineEdit* m_plantStartDays = nullptr;
+    QLineEdit* m_plantEndDays = nullptr;
     QLabel* m_plantDaysLabel = nullptr;
 
     QCheckBox* m_hasHarvest = nullptr;
     QDateEdit* m_harvestStart = nullptr;
     QDateEdit* m_harvestEnd = nullptr;
-    QLineEdit* m_harvestDays = nullptr;
+    QLineEdit* m_harvestStartDays = nullptr;
+    QLineEdit* m_harvestEndDays = nullptr;
     QLabel* m_harvestDaysLabel = nullptr;
 
     int m_originalId = -1;

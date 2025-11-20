@@ -20,5 +20,5 @@ echo "Building project with Ninja..."
 ninja
 
 # Run the app
-echo "Build complete. Run the app with:"
+echo "Build complete. Running the app with:"
 echo "$BUILD_DIR/garden-planner"
