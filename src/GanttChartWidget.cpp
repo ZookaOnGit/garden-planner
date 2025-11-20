@@ -220,7 +220,7 @@ void GanttChartWidget::drawBars(QPainter& p) {
     for (int i = 0; i < m_items.size(); ++i) {
         const auto& c = m_items[i];
 
-        auto drawRangeLane = [&](const QDate& a, const QDate& b, int lane, const QColor& col){
+        auto drawRangeLaneSow = [&](const QDate& a, const QDate& b, int lane){
             if (!isValidRange(a,b)) return;
             int laneTop = laneTopY(i, lane);
             int baseline = laneTop + m_subRowHeight / 2;
@@ -229,13 +229,79 @@ void GanttChartWidget::drawBars(QPainter& p) {
             int h = std::max(10, m_subRowHeight - 6);
             QRect r(x1, baseline - h/2, x2 - x1, h);
             p.setPen(Theme::BarOutline);
-            p.setBrush(col);
-            p.drawRoundedRect(r, 3, 3);
+            p.setBrush(Theme::Sow);
+            p.drawRect(r);
         };
 
-        drawRangeLane(c.sowStart,     c.sowEnd,     0, Theme::Sow);
-        drawRangeLane(c.plantStart,   c.plantEnd,   1, Theme::Plant);
-        drawRangeLane(c.harvestStart, c.harvestEnd, 2, Theme::Harvest);
+        auto drawRangeLanePlant = [&](const QDate& sowStart, const QDate& sowEnd, const QDate& plantStart, const QDate& plantEnd, int lane){
+            if (!isValidRange(plantStart,plantEnd)) return;
+            int laneTop = laneTopY(i, lane);
+            int baseline = laneTop + m_subRowHeight / 2;
+
+            int pre = sowStart.daysTo(plantStart);
+            int post = sowEnd.daysTo(plantEnd);
+
+            int x1 = dateToX(plantStart);
+            int x2 = dateToX(plantStart.addDays(post - pre));
+            int h = std::max(10, m_subRowHeight - 6);
+            QRect s(x1, baseline - h/2, x2 - x1, h);
+            p.setPen(Theme::BarOutline);
+            p.setBrush(Theme::PlantPrePost);
+            p.drawRect(s);
+
+            x1 = dateToX(plantStart.addDays(post - pre));
+            x2 = dateToX(plantEnd.addDays(0 - post + pre));
+            h = std::max(10, m_subRowHeight - 6);
+            QRect r(x1, baseline - h/2, x2 - x1, h);
+            p.setPen(Theme::BarOutline);
+            p.setBrush(Theme::Plant);
+            p.drawRect(r);
+
+            x1 = dateToX(plantEnd.addDays(0 - post + pre));
+            x2 = dateToX(plantEnd);
+            h = std::max(10, m_subRowHeight - 6);
+            QRect e(x1, baseline - h/2, x2 - x1, h);
+            p.setPen(Theme::BarOutline);
+            p.setBrush(Theme::PlantPrePost);
+            p.drawRect(e);            
+        };
+
+        auto drawRangeLaneHarvest = [&](const QDate& sowStart, const QDate& sowEnd, const QDate& plantStart, const QDate& plantEnd, int lane){
+            if (!isValidRange(plantStart,plantEnd)) return;
+            int laneTop = laneTopY(i, lane);
+            int baseline = laneTop + m_subRowHeight / 2;
+
+            int pre = sowStart.daysTo(plantStart);
+            int post = sowEnd.daysTo(plantEnd);
+
+            int x1 = dateToX(plantStart);
+            int x2 = dateToX(plantStart.addDays(post - pre));
+            int h = std::max(10, m_subRowHeight - 6);
+            QRect s(x1, baseline - h/2, x2 - x1, h);
+            p.setPen(Theme::BarOutline);
+            p.setBrush(Theme::HarvestPrePost);
+            p.drawRect(s);
+
+            x1 = dateToX(plantStart.addDays(post - pre));
+            x2 = dateToX(plantEnd.addDays(0 - post + pre));
+            h = std::max(10, m_subRowHeight - 6);
+            QRect r(x1, baseline - h/2, x2 - x1, h);
+            p.setPen(Theme::BarOutline);
+            p.setBrush(Theme::Harvest);
+            p.drawRect(r);
+
+            x1 = dateToX(plantEnd.addDays(0 - post + pre));
+            x2 = dateToX(plantEnd);
+            h = std::max(10, m_subRowHeight - 6);
+            QRect e(x1, baseline - h/2, x2 - x1, h);
+            p.setPen(Theme::BarOutline);
+            p.setBrush(Theme::HarvestPrePost);
+            p.drawRect(e);            
+        };        
+
+        drawRangeLaneSow(c.sowStart, c.sowEnd, 0);
+        drawRangeLanePlant(c.sowStart, c.sowEnd, c.plantStart, c.plantEnd, 1);
+        drawRangeLaneHarvest(c.plantStart, c.plantEnd, c.harvestStart, c.harvestEnd, 2);
     }
 
     p.setBrush(Qt::NoBrush);

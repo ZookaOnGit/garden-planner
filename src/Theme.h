@@ -40,7 +40,9 @@ namespace Theme {
     // Used by: task bars in `GanttChartWidget::drawBars`
     inline const QColor Sow = QColor(66,133,244);
     inline const QColor Plant = QColor(52,168,83);
+    inline const QColor PlantPrePost = QColor(52,168,83,100);
     inline const QColor Harvest = QColor(244,180,0);
+    inline const QColor HarvestPrePost = QColor(244,180,0, 100);
 
     // Week tick/line and "today" indicator
     // Used by: weekly tick marks, dashed week separators drawn on top of bars
