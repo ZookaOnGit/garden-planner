@@ -9,6 +9,8 @@
 
 inline QVector<CropWindow> loadCropsFromQuery(QSqlQuery& query) {
     QVector<CropWindow> items;
+    QDate today = QDate::currentDate();
+
     while (query.next()) {
         CropWindow c;
         // Expecting query to provide columns: id, name, sow_start, sow_end,
@@ -29,13 +31,6 @@ inline QVector<CropWindow> loadCropsFromQuery(QSqlQuery& query) {
         c.harvestStart = query.value(idx++).toDate();
         c.harvestEnd   = query.value(idx++).toDate();
         c.notes        = query.value(idx++).toString();
-
-        auto fix = [](QDate& a, QDate& b){
-            if (a.isValid() && b.isValid() && a > b) std::swap(a,b);
-        };
-        fix(c.sowStart, c.sowEnd);
-        fix(c.plantStart, c.plantEnd);
-        fix(c.harvestStart, c.harvestEnd);
 
         items.push_back(std::move(c));
     }

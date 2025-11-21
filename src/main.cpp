@@ -50,7 +50,24 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    QSqlQuery query("SELECT id, name, sow_start, sow_end, plant_start, plant_end, harvest_start, harvest_end, notes FROM crops");
+    QSqlQuery updateDatesQuery;
+    // Update past dates to the next year
+    if (!updateDatesQuery.exec("UPDATE crops "
+                               "SET sow_start = DATE(sow_start, '+1 year'),"
+                               "plant_start = DATE(plant_start, '+1 year'),"
+                               "harvest_start = DATE(harvest_start, '+1 year'),"
+                               "sow_end = DATE(sow_end, '+1 year'),"
+                               "plant_end = DATE(plant_end, '+1 year'),"
+                               "harvest_end = DATE(harvest_end, '+1 year') "
+                               "WHERE sow_end < DATE('now') "
+                               "AND plant_end < DATE('now') "
+                               "AND harvest_end < DATE('now')")) {
+        QMessageBox::critical(nullptr, "DB Error", 
+                            QString("Failed to update past dates: %1").arg(updateDatesQuery.lastError().text()));
+        return 1;
+    }
+
+    QSqlQuery query("SELECT * FROM crops ORDER BY ABS(julianday(sow_end) - julianday('now')) ASC;");
     if (!query.isActive()) {
         QMessageBox::critical(nullptr, "Query Error", query.lastError().text());
         return 1;
@@ -223,7 +240,7 @@ int main(int argc, char *argv[]) {
     QTimer::singleShot(0, [scroller, leftScroller, splitter, left, chart]() {
         int tx = chart->xForDate(QDate::currentDate());
         // Left-align today's date with a 50px left padding
-        const int padding = 50;
+        const int padding = 100;
         int target = tx - padding;
         QScrollBar* h = scroller->horizontalScrollBar();
         if (target < h->minimum()) target = h->minimum();
