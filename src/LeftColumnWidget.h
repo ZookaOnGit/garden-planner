@@ -31,6 +31,10 @@ signals:
     void cropDeleteRequested(int index);
     // Emitted when user clicks the small + in the header to add a crop or right-click menu
     void addCropRequested();
+    // Emitted when the user requests hiding of a crop (right-click -> Hide)
+    void cropHideRequested(int index);
+    // Emitted when the user requests to unhide crops (right-click -> Unhide Crops)
+    void unhideCropsRequested();
 
 private:
     QVector<CropWindow> m_items;

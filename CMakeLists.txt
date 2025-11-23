@@ -23,6 +23,8 @@ qt_add_executable(garden-planner
     src/LeftColumnWidget.h
     src/SettingsManager.cpp
     src/SettingsManager.h
+    src/UnhideCropsDialog.cpp
+    src/UnhideCropsDialog.h
 )
 
 target_link_libraries(garden-planner PRIVATE Qt6::Widgets Qt6::Sql)

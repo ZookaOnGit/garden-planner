@@ -21,6 +21,7 @@
 #include <QMessageBox>
 #include <memory>
 #include "SettingsManager.h"
+#include "UnhideCropsDialog.h"
 
 int main(int argc, char *argv[]) {
     QApplication app(argc, argv);
@@ -42,8 +43,9 @@ int main(int argc, char *argv[]) {
                               "plant_start TEXT,"
                               "plant_end TEXT,"
                               "harvest_start TEXT,"
-                              "harvest_end TEXT"
-                              "notes TEXT"
+                              "harvest_end TEXT,"
+                              "notes TEXT,"
+                              "hide TEXT DEFAULT 'false'"
                               ")")) {
         QMessageBox::critical(nullptr, "DB Error", 
                             QString("Failed to create crops table: %1").arg(createTableQuery.lastError().text()));
@@ -67,7 +69,7 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    QSqlQuery query("SELECT * FROM crops ORDER BY ABS(julianday(sow_end) - julianday('now')) ASC;");
+    QSqlQuery query("SELECT * FROM crops WHERE hide != 'true' ORDER BY ABS(julianday(sow_end) - julianday('now')) ASC;");
     if (!query.isActive()) {
         QMessageBox::critical(nullptr, "Query Error", query.lastError().text());
         return 1;
@@ -151,7 +153,7 @@ int main(int argc, char *argv[]) {
 
     // Helper to reload the crops from DB and update widgets
     auto reload = [itemsPtr, left, chart]() {
-    QSqlQuery q("SELECT id, name, sow_start, sow_end, plant_start, plant_end, harvest_start, harvest_end, notes FROM crops");
+    QSqlQuery q("SELECT * FROM crops WHERE hide != 'true' ORDER BY ABS(julianday(sow_end) - julianday('now')) ASC;");
         if (!q.isActive()) return false;
         *itemsPtr = loadCropsFromQuery(q);
         left->setItems(*itemsPtr);
@@ -235,6 +237,33 @@ int main(int argc, char *argv[]) {
         }
         reload();
     });
+
+    // Right-click -> Hide handler
+    QObject::connect(left, &LeftColumnWidget::cropHideRequested, [itemsPtr, left, chart, &reload](int idx){
+        if (idx < 0 || idx >= itemsPtr->size()) return;
+        CropWindow current = (*itemsPtr)[idx];
+        auto res = QMessageBox::question(nullptr, "Hide crop",
+                                         QString("Hide '%1'?").arg(current.name),
+                                         QMessageBox::Yes | QMessageBox::No);
+        if (res != QMessageBox::Yes) return;
+        QSqlQuery hide;
+        hide.prepare("UPDATE crops SET hide = 'true' WHERE id = :id");
+        hide.bindValue(":id", current.id);
+        if (!hide.exec()) {
+            QMessageBox::critical(nullptr, "DB Hide Error", hide.lastError().text());
+            return;
+        }
+        reload();
+    });
+
+    QObject::connect(left, &LeftColumnWidget::unhideCropsRequested, [left, &reload]() {
+        UnhideCropsDialog dlg;
+        if (dlg.exec() == QDialog::Accepted) {
+        reload();
+        }
+    });
+
+
 
     // After the UI is shown, scroll the timeline so today's date is centered
     QTimer::singleShot(0, [scroller, leftScroller, splitter, left, chart]() {

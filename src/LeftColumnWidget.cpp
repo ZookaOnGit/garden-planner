@@ -145,6 +145,9 @@ void LeftColumnWidget::contextMenuEvent(QContextMenuEvent* ev) {
     QAction* addAct = menu.addAction("Add");
     QAction* editAct = menu.addAction("Edit");
     QAction* delAct = menu.addAction("Delete");
+    menu.addSeparator();
+    QAction* hideAct = menu.addAction("Hide");
+    QAction* unhideAct = menu.addAction("Unhide Crops");
     QAction* chosen = menu.exec(ev->globalPos());
     if (!chosen) return;
     if (chosen == addAct) {
@@ -153,6 +156,10 @@ void LeftColumnWidget::contextMenuEvent(QContextMenuEvent* ev) {
         emit cropDoubleClicked(idx);
     } else if (chosen == delAct) {
         emit cropDeleteRequested(idx);
+    } else if (chosen == hideAct) {
+        emit cropHideRequested(idx);
+    } else if (chosen == unhideAct) {
+        emit unhideCropsRequested();
     }
 }
 
