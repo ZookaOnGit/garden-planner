@@ -5,6 +5,7 @@
 #include <QMouseEvent>
 #include <QContextMenuEvent>
 #include <QMenu>
+#include <algorithm>
 
 LeftColumnWidget::LeftColumnWidget(QWidget* parent) : QWidget(parent) {
     setAutoFillBackground(true);
@@ -15,6 +16,9 @@ LeftColumnWidget::LeftColumnWidget(QWidget* parent) : QWidget(parent) {
 
 void LeftColumnWidget::setItems(const QVector<CropWindow>& items) {
     m_items = items;
+    m_itemsDefault = items;  // Store the original order
+    // Re-apply current sort mode
+    setSortMode(m_sortMode);
     updateGeometry();
     setMinimumSize(sizeHint());
     update();
@@ -47,6 +51,28 @@ int LeftColumnWidget::preferredWidth() const {
     int padding = 12 + 40; // margin + space for lane labels
     int w = std::max(m_leftMargin, maxw + padding);
     return std::max(w, 100);
+}
+
+void LeftColumnWidget::setSortMode(SortMode mode) {
+    if (m_sortMode == mode) return;
+    m_sortMode = mode;
+
+    if (mode == Alphabetical) {
+        // Sort items alphabetically by crop name
+        std::sort(m_items.begin(), m_items.end(), [](const CropWindow& a, const CropWindow& b) {
+            return a.name.toLower() < b.name.toLower();
+        });
+    } else if (mode == Default) {
+        // Restore to original database order
+        m_items = m_itemsDefault;
+    }
+
+    updateGeometry();
+    setMinimumSize(sizeHint());
+    update();
+
+    // Emit signal with the reordered items so the chart and main data can be updated
+    emit itemsReordered(m_items);
 }
 
 void LeftColumnWidget::paintEvent(QPaintEvent*) {
@@ -127,13 +153,30 @@ void LeftColumnWidget::mouseDoubleClickEvent(QMouseEvent* ev) {
 void LeftColumnWidget::contextMenuEvent(QContextMenuEvent* ev) {
     int y = ev->pos().y();
     // If the click is above the content area (in the header), show a
-    // header-only menu with Add.
+    // header-only menu with Add and Sort options.
     if (y < m_topMargin) {
         QMenu menu(this);
         QAction* addAct = menu.addAction("Add");
+        menu.addSeparator();
+        QAction* sortDefaultAct = menu.addAction("Sort: Default");
+        QAction* sortAlphaAct = menu.addAction("Sort: Alphabetical");
+
+        // Mark current sort mode
+        if (m_sortMode == Default) {
+            sortDefaultAct->setText("✓ Sort: Default");
+        } else {
+            sortAlphaAct->setText("✓ Sort: Alphabetical");
+        }
+
         QAction* chosen = menu.exec(ev->globalPos());
         if (!chosen) return;
-        if (chosen == addAct) emit addCropRequested();
+        if (chosen == addAct) {
+            emit addCropRequested();
+        } else if (chosen == sortDefaultAct) {
+            setSortMode(Default);
+        } else if (chosen == sortAlphaAct) {
+            setSortMode(Alphabetical);
+        }
         return;
     }
 
@@ -148,6 +191,17 @@ void LeftColumnWidget::contextMenuEvent(QContextMenuEvent* ev) {
     menu.addSeparator();
     QAction* hideAct = menu.addAction("Hide");
     QAction* unhideAct = menu.addAction("Unhide Crops");
+    menu.addSeparator();
+    QAction* sortDefaultAct = menu.addAction("Sort: Default");
+    QAction* sortAlphaAct = menu.addAction("Sort: Alphabetical");
+
+    // Mark current sort mode
+    if (m_sortMode == Default) {
+        sortDefaultAct->setText("✓ Sort: Default");
+    } else {
+        sortAlphaAct->setText("✓ Sort: Alphabetical");
+    }
+
     QAction* chosen = menu.exec(ev->globalPos());
     if (!chosen) return;
     if (chosen == addAct) {
@@ -160,6 +214,10 @@ void LeftColumnWidget::contextMenuEvent(QContextMenuEvent* ev) {
         emit cropHideRequested(idx);
     } else if (chosen == unhideAct) {
         emit unhideCropsRequested();
+    } else if (chosen == sortDefaultAct) {
+        setSortMode(Default);
+    } else if (chosen == sortAlphaAct) {
+        setSortMode(Alphabetical);
     }
 }
 

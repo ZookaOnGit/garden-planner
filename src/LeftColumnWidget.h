@@ -17,6 +17,14 @@ public:
     // Return a preferred width based on longest crop name and lane labels
     int preferredWidth() const;
 
+    // Sorting methods
+    enum SortMode { Default, Alphabetical };
+    void setSortMode(SortMode mode);
+    SortMode sortMode() const { return m_sortMode; }
+
+    // Get items in their current sort order
+    const QVector<CropWindow>& items() const { return m_items; }
+
 protected:
     void paintEvent(QPaintEvent*) override;
     void mouseDoubleClickEvent(QMouseEvent* ev) override;
@@ -35,9 +43,13 @@ signals:
     void cropHideRequested(int index);
     // Emitted when the user requests to unhide crops (right-click -> Unhide Crops)
     void unhideCropsRequested();
+    // Emitted when sort mode changes - includes the reordered items
+    void itemsReordered(const QVector<CropWindow>& sortedItems);
 
 private:
     QVector<CropWindow> m_items;
+    QVector<CropWindow> m_itemsDefault;  // Store original order for default sort
+    SortMode m_sortMode = Default;
 
     // Keep layout constants in sync with GanttChartWidget
     int m_leftMargin  = 160;
@@ -53,5 +65,5 @@ private:
         return blockTop + laneOffset;
     }
     QRect m_addBtnRect;
-    
+
 };

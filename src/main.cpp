@@ -25,7 +25,7 @@
 
 int main(int argc, char *argv[]) {
     QApplication app(argc, argv);
-        
+
     QSqlDatabase db = QSqlDatabase::addDatabase("QSQLITE");
     db.setDatabaseName("garden.db");
     if (!db.open()) {
@@ -47,7 +47,7 @@ int main(int argc, char *argv[]) {
                               "notes TEXT,"
                               "hide TEXT DEFAULT 'false'"
                               ")")) {
-        QMessageBox::critical(nullptr, "DB Error", 
+        QMessageBox::critical(nullptr, "DB Error",
                             QString("Failed to create crops table: %1").arg(createTableQuery.lastError().text()));
         return 1;
     }
@@ -64,7 +64,7 @@ int main(int argc, char *argv[]) {
                                "WHERE sow_end < DATE('now') "
                                "AND plant_end < DATE('now') "
                                "AND harvest_end < DATE('now')")) {
-        QMessageBox::critical(nullptr, "DB Error", 
+        QMessageBox::critical(nullptr, "DB Error",
                             QString("Failed to update past dates: %1").arg(updateDatesQuery.lastError().text()));
         return 1;
     }
@@ -138,6 +138,12 @@ int main(int argc, char *argv[]) {
     });
     QObject::connect(leftV, &QScrollBar::valueChanged, rightV, [rightV](int v){
         if (rightV->value() != v) rightV->setValue(v);
+    });
+
+    // Connect sort order changes from left column to update the shared items and chart
+    QObject::connect(left, &LeftColumnWidget::itemsReordered, [itemsPtr, chart](const QVector<CropWindow>& sortedItems){
+        *itemsPtr = sortedItems;
+        chart->setItems(sortedItems);
     });
 
     QMainWindow mainWindow;
@@ -292,7 +298,7 @@ int main(int argc, char *argv[]) {
 
         // Optional: make the right side stretch, left side fixed.
         splitter->setStretchFactor(0, 0); // left
-        splitter->setStretchFactor(1, 1); // right        
+        splitter->setStretchFactor(1, 1); // right
     });
 
     QObject::connect(&app, &QApplication::aboutToQuit, [&]() {

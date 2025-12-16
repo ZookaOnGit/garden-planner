@@ -19,7 +19,7 @@ cmake .. -G Ninja
 echo "Building project with Ninja..."
 ninja
 
-cp "$BUILD_DIR/garden-planner" .
+cp "$BUILD_DIR/garden-planner" "$PROJECT_DIR"
 
 # Run the app
 echo "Build complete. Running the app with:"
