@@ -168,8 +168,8 @@ int main(int argc, char *argv[]) {
     };
 
     // Add crop request (from left column's small + button) -> open dialog for new crop
-    QObject::connect(left, &LeftColumnWidget::addCropRequested, [itemsPtr, left, chart, &reload]() {
-        CropEditDialog dlg;
+    QObject::connect(left, &LeftColumnWidget::addCropRequested, [itemsPtr, left, chart, &reload, &mainWindow]() {
+        CropEditDialog dlg(&mainWindow);
         if (dlg.exec() == QDialog::Accepted) {
             CropWindow c = dlg.crop();
             QSqlQuery ins;
@@ -194,10 +194,10 @@ int main(int argc, char *argv[]) {
     });
 
     // Double-click a crop in the left column to edit it
-    QObject::connect(left, &LeftColumnWidget::cropDoubleClicked, [itemsPtr, left, chart, &reload](int idx){
+    QObject::connect(left, &LeftColumnWidget::cropDoubleClicked, [itemsPtr, left, chart, &reload, &mainWindow](int idx){
         if (idx < 0 || idx >= itemsPtr->size()) return;
         CropWindow current = (*itemsPtr)[idx];
-        CropEditDialog dlg;
+        CropEditDialog dlg(&mainWindow);
     dlg.setCrop(current);
     dlg.setOriginalId(current.id);
         if (dlg.exec() == QDialog::Accepted) {
@@ -262,8 +262,8 @@ int main(int argc, char *argv[]) {
         reload();
     });
 
-    QObject::connect(left, &LeftColumnWidget::unhideCropsRequested, [left, &reload]() {
-        UnhideCropsDialog dlg;
+    QObject::connect(left, &LeftColumnWidget::unhideCropsRequested, [left, &reload, &mainWindow]() {
+        UnhideCropsDialog dlg(&mainWindow);
         if (dlg.exec() == QDialog::Accepted) {
         reload();
         }

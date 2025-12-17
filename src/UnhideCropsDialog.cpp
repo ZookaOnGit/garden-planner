@@ -1,6 +1,7 @@
 #include "UnhideCropsDialog.h"
 #include <QPushButton>
 #include <QVBoxLayout>
+#include <QSizePolicy>
 #include <QSqlQuery>
 #include <QSqlError>
 #include <QMessageBox>
@@ -8,8 +9,16 @@
 
 UnhideCropsDialog::UnhideCropsDialog(QWidget *parent) : QDialog(parent) {
     setWindowTitle("Unhide Crops");
+    // Use window-modal modality (parent window must be passed by the caller)
+    // so only the parent/main window is blocked while this dialog is open.
+    setWindowModality(Qt::WindowModal);
+
+    // Prefer a larger default size and allow the list to expand to fill space.
+    setMinimumSize(480, 360);
 
     listWidget = new QListWidget(this);
+    listWidget->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    listWidget->setMinimumHeight(240);
     QPushButton *okButton = new QPushButton("Unhide Selected", this);
     QPushButton *cancelButton = new QPushButton("Cancel", this);
 
