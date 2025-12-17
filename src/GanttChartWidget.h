@@ -26,13 +26,9 @@ public:
     void setLeftMargin(int pixels);
     void setTopMargin(int pixels);
     int topMargin() const;
-
     // Return x pixel position for a given date in the chart's content coords
     int xForDate(const QDate& d) const;
-
     QSize sizeHint() const override;
-
-    // Tooltip support
     void mouseMoveEvent(QMouseEvent* ev) override;
     void leaveEvent(QEvent* ev) override;
 protected:

@@ -17,7 +17,6 @@ LeftColumnWidget::LeftColumnWidget(QWidget* parent) : QWidget(parent) {
 void LeftColumnWidget::setItems(const QVector<CropWindow>& items) {
     m_items = items;
     m_itemsDefault = items;  // Store the original order
-    // Re-apply current sort mode
     setSortMode(m_sortMode);
     updateGeometry();
     setMinimumSize(sizeHint());

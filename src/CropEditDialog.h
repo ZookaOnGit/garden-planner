@@ -25,20 +25,13 @@ class QCheckBox;
 class CropEditDialog : public QDialog {
     Q_OBJECT
 public:
-    // If parent passes an existing crop name, the dialog will be treated as an edit.
     explicit CropEditDialog(QWidget* parent = nullptr);
-
-    // Populate fields from an existing CropWindow
+    CropWindow crop() const;
     void setCrop(const CropWindow& c);
     void updateSowDays();
     void updateSowEndDate();
     void updateGerminationDates();
     void updateHarvestDates();
-
-    // Fill a CropWindow from the dialog contents
-    CropWindow crop() const;
-
-    // Set/Get the original id when editing (used by caller to identify row)
     void setOriginalId(int id) { m_originalId = id; }
     int originalId() const { return m_originalId; }
 
