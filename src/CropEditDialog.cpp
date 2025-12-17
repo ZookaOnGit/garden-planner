@@ -5,7 +5,7 @@
 CropEditDialog::CropEditDialog(QWidget* parent) : QDialog(parent) {
     setWindowTitle("Add / Edit Crop");
     setWindowModality(Qt::WindowModal);
-    setMinimumSize(600, 400);
+    setMinimumSize(600, 500);
 
     const int DAYS_FIELD_WIDTH = 70;
 
