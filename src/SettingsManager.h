@@ -13,22 +13,26 @@ class SettingsManager {
 public:
     // Get the global singleton instance
     static SettingsManager& instance();
-    
-    void saveAddEditWindowGeometry(QWidget* w);    
+
+    void saveAddEditWindowGeometry(QWidget* w);
     void loadAddEditWindowGeometry(QWidget* w);
     void saveMainWindowGeometry(QMainWindow* mw);
     void loadMainWindowGeometry(QMainWindow* mw);
     void saveMainSplitterState(QSplitter* s);
     void loadMainSplitterState(QSplitter* s);
 
+    // Left column sort mode: stored as integer (0 = Default, 1 = Alphabetical)
+    void saveLeftColumnSortMode(int mode);
+    int loadLeftColumnSortMode();
+
 private:
     // Private constructor for singleton
     SettingsManager(const QString& dbPath = "garden.db");
-    
+
     // Prevent copying
     SettingsManager(const SettingsManager&) = delete;
     SettingsManager& operator=(const SettingsManager&) = delete;
-    
+
     QString m_dbPath;
     QString m_connectionName;
     void executeQuery(const QString& query);

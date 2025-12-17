@@ -83,6 +83,9 @@ int main(int argc, char *argv[]) {
     // Keep items in a shared container so lambdas can refresh it easily.
     auto itemsPtr = std::make_shared<QVector<CropWindow>>(items);
     left->setItems(*itemsPtr);
+    // Load saved left-column sort mode (0 = Default, 1 = Alphabetical)
+    int savedMode = SettingsManager::instance().loadLeftColumnSortMode();
+    left->setSortMode(static_cast<LeftColumnWidget::SortMode>(savedMode));
     // Example: reduce the left column width so it takes less horizontal space.
     // You can change this value or call left->setColumnWidth(...) from elsewhere.
     left->setColumnWidth(300);
@@ -141,9 +144,11 @@ int main(int argc, char *argv[]) {
     });
 
     // Connect sort order changes from left column to update the shared items and chart
-    QObject::connect(left, &LeftColumnWidget::itemsReordered, [itemsPtr, chart](const QVector<CropWindow>& sortedItems){
+    QObject::connect(left, &LeftColumnWidget::itemsReordered, [itemsPtr, chart, left](const QVector<CropWindow>& sortedItems){
         *itemsPtr = sortedItems;
         chart->setItems(sortedItems);
+        // Persist the user's sort preference whenever the order (and mode) changes
+        SettingsManager::instance().saveLeftColumnSortMode(static_cast<int>(left->sortMode()));
     });
 
     QMainWindow mainWindow;

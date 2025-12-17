@@ -4,8 +4,6 @@
 
 CropEditDialog::CropEditDialog(QWidget* parent) : QDialog(parent) {
     setWindowTitle("Add / Edit Crop");
-    // Use window-modal modality (parent window must be passed by the caller)
-    // so only the parent/main window is blocked while this dialog is open.
     setWindowModality(Qt::WindowModal);
     setMinimumSize(600, 400);
 
@@ -16,7 +14,7 @@ CropEditDialog::CropEditDialog(QWidget* parent) : QDialog(parent) {
     auto* form = new QFormLayout;
     m_nameEdit = new QLineEdit;
     form->addRow("Name:", m_nameEdit);
-    auto* daysValidator = new QIntValidator(0, 10000, this); // for the days fields
+    auto* daysValidator = new QIntValidator(0, 10000, this);         // for the days fields
     auto* positiveDaysValidator = new QIntValidator(1, 10000, this); // for germination days field
 
     // Sow
@@ -74,30 +72,16 @@ CropEditDialog::CropEditDialog(QWidget* parent) : QDialog(parent) {
         m_plantEndDays->setMaximumWidth(DAYS_FIELD_WIDTH);
 
         m_plantStart = new QDateEdit;
-        //m_plantStart->setCalendarPopup(true);
         m_plantStart->hide();
         m_plantEnd = new QDateEdit;
-        //m_plantEnd->setCalendarPopup(true);
         m_plantEnd->hide();
-        //m_plantStart->setDisplayFormat("dd-MM-yyyy");
-        //m_plantEnd->setDisplayFormat("dd-MM-yyyy");
         m_plantStart->setDate(m_sowStart->date().addDays(m_plantStartDays->text().toInt()));
         m_plantEnd->setDate(m_sowEnd->date().addDays(m_plantEndDays->text().toInt()));
-
-        /*m_plantDays = new QLineEdit;
-        m_plantDays->setValidator(daysValidator);
-        m_plantDays->setPlaceholderText(tr("0"));
-        m_plantDays->setAlignment(Qt::AlignRight);
-        m_plantDays->setMaximumWidth(DAYS_FIELD_WIDTH);
-        m_plantDays->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);*/
         m_plantDaysLabel = new QLabel;
         h->addWidget(m_hasPlant);
         h->addWidget(m_plantStartDays);
         h->addWidget(toLabel);
         h->addWidget(m_plantEndDays);
-        //h->addWidget(m_plantStart);
-        //h->addWidget(m_plantEnd);
-        //h->addWidget(m_plantDays);
         h->addWidget(m_plantDaysLabel);
         form->addRow(h);
     }
@@ -125,30 +109,16 @@ CropEditDialog::CropEditDialog(QWidget* parent) : QDialog(parent) {
         m_harvestEndDays->setMaximumWidth(DAYS_FIELD_WIDTH);
 
         m_harvestStart = new QDateEdit;
-        //m_harvestStart->setCalendarPopup(true);
         m_harvestStart->hide();
         m_harvestEnd = new QDateEdit;
-        //m_harvestEnd->setCalendarPopup(true);
         m_harvestEnd->hide();
-        //m_harvestStart->setDisplayFormat("dd-MM-yyyy");
-        //m_harvestEnd->setDisplayFormat("dd-MM-yyyy");
         m_harvestStart->setDate(m_plantStart->date().addDays(m_harvestStartDays->text().toInt()));
         m_harvestEnd->setDate(m_plantEnd->date().addDays(m_harvestEndDays->text().toInt()));
-
-        /*m_harvestDays = new QLineEdit;
-        m_harvestDays->setValidator(daysValidator);
-        m_harvestDays->setPlaceholderText(tr("0"));
-        m_harvestDays->setAlignment(Qt::AlignRight);
-        m_harvestDays->setMaximumWidth(DAYS_FIELD_WIDTH);
-        m_harvestDays->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);*/
         m_harvestDaysLabel = new QLabel;
         h->addWidget(m_hasHarvest);
         h->addWidget(m_harvestStartDays);
         h->addWidget(toLabel);
         h->addWidget(m_harvestEndDays);
-        //h->addWidget(m_harvestStart);
-        //h->addWidget(m_harvestEnd);
-        //h->addWidget(m_harvestDays);
         h->addWidget(m_harvestDaysLabel);
         form->addRow(h);
     }
@@ -192,7 +162,6 @@ CropEditDialog::CropEditDialog(QWidget* parent) : QDialog(parent) {
         SettingsManager::instance().saveAddEditWindowGeometry(this);
 
         if (m_nameEdit->text().trimmed().isEmpty()) {
-            // simple validation: require name
             m_nameEdit->setFocus();
             return;
         }
@@ -217,7 +186,6 @@ CropEditDialog::CropEditDialog(QWidget* parent) : QDialog(parent) {
     });
     connect(cancel, &QPushButton::clicked, this, &QDialog::reject);
 
-    // Default state: checkboxes on
     m_hasSow->setChecked(true);
     m_hasPlant->setChecked(true);
     m_hasHarvest->setChecked(true);
@@ -275,7 +243,7 @@ void CropEditDialog::updateGerminationDates()
     bool ok = false;
     int days = m_plantStartDays->text().toInt(&ok);
     if (ok) {
-        QSignalBlocker blocker(m_plantStartDays); // prevent recursion
+        QSignalBlocker blocker(m_plantStartDays);
         QDate newStart = m_sowStart->date().addDays(days);
         m_plantStart->setDate(newStart);
     }
@@ -286,7 +254,7 @@ void CropEditDialog::updateGerminationDates()
     ok = false;
     days = m_plantEndDays->text().toInt(&ok);
     if (ok) {
-        QSignalBlocker blocker(m_plantEndDays); // prevent recursion
+        QSignalBlocker blocker(m_plantEndDays);
         QDate newEnd = m_sowEnd->date().addDays(days);
         m_plantEnd->setDate(newEnd);
     }
@@ -319,7 +287,7 @@ void CropEditDialog::updateHarvestDates()
     bool ok = false;
     int days = m_harvestStartDays->text().toInt(&ok);
     if (ok) {
-        QSignalBlocker blocker(m_harvestStartDays); // prevent recursion
+        QSignalBlocker blocker(m_harvestStartDays);
         QDate newStart = m_plantStart->date().addDays(days);
         m_harvestStart->setDate(newStart);
     }
@@ -330,7 +298,7 @@ void CropEditDialog::updateHarvestDates()
     ok = false;
     days = m_harvestEndDays->text().toInt(&ok);
     if (ok) {
-        QSignalBlocker blocker(m_harvestEndDays); // prevent recursion
+        QSignalBlocker blocker(m_harvestEndDays);
         QDate newEnd = m_plantEnd->date().addDays(days);
         m_harvestEnd->setDate(newEnd);
     }

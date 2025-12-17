@@ -67,7 +67,7 @@ void SettingsManager::saveAddEditWindowGeometry(QWidget* w) {
             << "height:" << rect.height();
 
     const QByteArray blob = w->saveGeometry();
-    setValue("addedit_window_geometry", QString(blob.toBase64()));    
+    setValue("addedit_window_geometry", QString(blob.toBase64()));
 }
 
 void SettingsManager::loadAddEditWindowGeometry(QWidget* w) {
@@ -94,7 +94,7 @@ void SettingsManager::saveMainWindowGeometry(QMainWindow* mw) {
             << "height:" << rect.height();
 
     const QByteArray blob = mw->saveGeometry();
-    setValue("main_window_geometry", QString(blob.toBase64()));    
+    setValue("main_window_geometry", QString(blob.toBase64()));
 }
 
 void SettingsManager::loadMainWindowGeometry(QMainWindow* mw) {
@@ -115,7 +115,7 @@ void SettingsManager::loadMainWindowGeometry(QMainWindow* mw) {
 void SettingsManager::saveMainSplitterState(QSplitter* s) {
     qDebug() << "Saving main splitter state";
     const QByteArray blob = s->saveState();
-    setValue("main_splitter_state", QString(blob.toBase64()));    
+    setValue("main_splitter_state", QString(blob.toBase64()));
 }
 
 void SettingsManager::loadMainSplitterState(QSplitter* s) {
@@ -125,4 +125,17 @@ void SettingsManager::loadMainSplitterState(QSplitter* s) {
         const QByteArray blob = QByteArray::fromBase64(encoded.toUtf8());
         s->restoreState(blob);
     }
+}
+
+void SettingsManager::saveLeftColumnSortMode(int mode) {
+    // store as simple integer string
+    setValue("left_column_sort", QString::number(mode));
+}
+
+int SettingsManager::loadLeftColumnSortMode() {
+    const QString v = getValue("left_column_sort");
+    if (v.isEmpty()) return 0; // default
+    bool ok = false;
+    int m = v.toInt(&ok);
+    return ok ? m : 0;
 }
