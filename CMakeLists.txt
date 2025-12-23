@@ -25,6 +25,12 @@ qt_add_executable(garden-planner
     src/SettingsManager.h
     src/UnhideCropsDialog.cpp
     src/UnhideCropsDialog.h
+    src/BedModel.h
+    src/BedModel.cpp
+    src/BedGanttWidget.h
+    src/BedGanttWidget.cpp
+    src/BedListWindow.h
+    src/BedListWindow.cpp
 )
 
 target_link_libraries(garden-planner PRIVATE Qt6::Widgets Qt6::Sql)

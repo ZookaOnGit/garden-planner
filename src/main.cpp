@@ -11,6 +11,7 @@
 #include "LeftColumnWidget.h"
 #include "DataLoader.h"
 #include "CropEditDialog.h"
+#include "BedListWindow.h"
 #include <QHBoxLayout>
 #include <QScrollBar>
 #include <QSplitter>
@@ -19,6 +20,7 @@
 #include <QVBoxLayout>
 #include <QWidget>
 #include <QMessageBox>
+#include <QMenuBar>
 #include <memory>
 #include "SettingsManager.h"
 #include "UnhideCropsDialog.h"
@@ -158,6 +160,16 @@ int main(int argc, char *argv[]) {
     // TODO: not working
     //SettingsManager::instance().loadMainWindowGeometry(&mainWindow);
     //SettingsManager::instance().loadMainSplitterState(splitter);
+    // Add a simple menu to open the Bed Planner window
+    auto* menu = mainWindow.menuBar()->addMenu("Tools");
+    QAction* openBeds = menu->addAction("Open Bed Planner");
+    BedListWindow* bedWin = new BedListWindow(&mainWindow);
+    QObject::connect(openBeds, &QAction::triggered, [bedWin]() {
+        bedWin->show();
+        bedWin->raise();
+        bedWin->activateWindow();
+    });
+
     mainWindow.show();
 
 
