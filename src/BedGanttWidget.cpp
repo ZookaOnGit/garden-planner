@@ -45,9 +45,7 @@ void BedGanttWidget::paintEvent(QPaintEvent*) {
         p.fillRect(rowRect, rowBg);
         p.setPen(Theme::LightGrid);
         p.drawLine(0, y + h - 1, width(), y + h - 1);
-        // bed labels
-        p.setPen(Theme::TextPrimary);
-        p.drawText(6, y + 20, QString("Bed %1").arg(i+1));
+    // bed labels are now drawn in a frozen left-column widget; the gantt no longer paints them
     }
 
     // draw timeline ticks (every 7 days) with localized date + year
@@ -59,11 +57,11 @@ void BedGanttWidget::paintEvent(QPaintEvent*) {
         weekPen.setWidth(1);
         p.setPen(weekPen);
         p.drawLine(x, 0, x, rows * h);
-        QDate date = m_refDate.addDays(d);
-        p.setPen(Theme::TextPrimary);
-        QLocale loc = QLocale::system();
-        QString dateText = loc.toString(date, QLocale::ShortFormat);
-        p.drawText(x + 2, rows * h + 12, dateText);
+        //QDate date = m_refDate.addDays(d);
+        //p.setPen(Theme::TextPrimary);
+        //QLocale loc = QLocale::system();
+        //QString dateText = loc.toString(date, QLocale::ShortFormat);
+    // dates are shown in the fixed header; omit bottom labels here
     }
 
     if (!m_model) return;
@@ -436,10 +434,12 @@ void BedGanttWidget::zoomByFactor(double f, int centerX) {
     m_refDate = centerDate.addDays(-newCenterDays);
     updateGeometry();
     update();
+    emit viewChanged();
 }
 
 void BedGanttWidget::panBy(int dx) {
     int dayShift = qRound((double)dx / m_dayWidth);
     m_refDate = m_refDate.addDays(-dayShift);
     update();
+    emit viewChanged();
 }

@@ -8,6 +8,7 @@
 #include <QSpinBox>
 #include <QLabel>
 #include <QScrollArea>
+#include <QScrollBar>
 #include <QSettings>
 #include <QMessageBox>
 #include <QSqlQuery>
@@ -15,6 +16,135 @@
 #include <QDebug>
 #include <QCheckBox>
 #include <QCollator>
+#include <QPainter>
+#include <QMouseEvent>
+#include "Theme.h"
+
+// Small header widget that draws the timeline dates and stays fixed at top.
+class DateHeader : public QWidget {
+public:
+    DateHeader(BedGanttWidget* target, QWidget* parent = nullptr) : QWidget(parent), m_target(target) {
+        setFixedHeight(28);
+    }
+protected:
+    void paintEvent(QPaintEvent*) override {
+        QPainter p(this);
+        p.fillRect(rect(), Theme::WindowBackground);
+        if (!m_target) return;
+        int left = m_target->leftMargin();
+        int dayW = m_target->dayWidth();
+        QDate ref = m_target->refDate();
+        int widthAvail = width();
+        int daysToShow = (widthAvail - left) / dayW;
+        p.setPen(Theme::TextPrimary);
+        // use bold labels
+        QFont f = font();
+        f.setBold(true);
+        p.setFont(f);
+        QLocale loc = QLocale::system();
+
+        // Determine a sensible step (in days) so labels don't overlap.
+        // Measure a representative label width and ensure spacing >= width + padding.
+        QFontMetrics fm(p.font());
+        QDate sampleDate = ref;
+        QString sampleText = loc.toString(sampleDate, QLocale::ShortFormat);
+        int sampleW = fm.horizontalAdvance(sampleText) + 12; // padding
+        int dayStep = 1;
+        if (dayW > 0) dayStep = qMax(1, int(std::ceil(double(sampleW) / double(dayW))));
+
+        // Prefer week-aligned steps when possible (1,7,14,28)
+        if (dayStep > 1) {
+            if (dayStep <= 7) dayStep = 7;
+            else if (dayStep <= 14) dayStep = 14;
+            else if (dayStep <= 28) dayStep = 28;
+            // else keep the computed dayStep (covers very narrow displays)
+        }
+
+        for (int d = 0; d < daysToShow; d += dayStep) {
+            int x = left + d * dayW;
+            QDate date = ref.addDays(d);
+            QString dateText = loc.toString(date, QLocale::ShortFormat);
+            p.drawText(x + 2, height()/2 + fm.ascent()/2 + 2, dateText);
+        }
+    }
+
+    void mousePressEvent(QMouseEvent* evt) override {
+        if (!m_target) return;
+        if (evt->button() == Qt::LeftButton) {
+            m_dragging = true;
+            m_lastPos = evt->pos();
+            setCursor(Qt::ClosedHandCursor);
+        }
+    }
+
+    void mouseMoveEvent(QMouseEvent* evt) override {
+        if (!m_target) return;
+        if (!m_dragging) return;
+        QPoint pos = evt->pos();
+        int dx = pos.x() - m_lastPos.x();
+        if (dx != 0) {
+            // use the public facade to pan the gantt by pixels
+            m_target->panByPixels(dx);
+            m_lastPos = pos;
+        }
+    }
+
+    void mouseReleaseEvent(QMouseEvent* evt) override {
+        Q_UNUSED(evt);
+        if (m_dragging) {
+            m_dragging = false;
+            setCursor(Qt::ArrowCursor);
+        }
+    }
+
+private:
+    BedGanttWidget* m_target{nullptr};
+    bool m_dragging{false};
+    QPoint m_lastPos;
+};
+
+// Frozen left-column widget that draws bed labels and stays fixed while the gantt scrolls horizontally.
+class BedLabelsWidget : public QWidget {
+public:
+    BedLabelsWidget(BedGanttWidget* target, QScrollArea* scr, QWidget* parent = nullptr)
+        : QWidget(parent), m_target(target), m_scr(scr) {
+        setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Expanding);
+        if (m_target) setFixedWidth(m_target->leftMargin());
+        if (m_scr && m_scr->verticalScrollBar()) {
+            connect(m_scr->verticalScrollBar(), &QScrollBar::valueChanged, this, [this](int v){ m_scroll = v; update(); });
+        }
+        if (m_target) connect(m_target, &BedGanttWidget::viewChanged, this, [this](){ if (m_target) setFixedWidth(m_target->leftMargin()); update(); });
+    }
+
+protected:
+    void paintEvent(QPaintEvent*) override {
+        QPainter p(this);
+        p.fillRect(rect(), Theme::WindowBackground);
+        if (!m_target) return;
+        int rows = m_target->rowCount();
+        int rowH = m_target->rowHeight();
+        // bold labels
+        QFont f = font(); f.setBold(true); p.setFont(f);
+        QFontMetrics fm(p.font());
+        for (int i = 0; i < rows; ++i) {
+            int y = i * rowH - m_scroll;
+            // skip rows outside viewport to reduce overdraw
+            if (y + rowH < 0) continue;
+            if (y > height()) break;
+            // separator line
+            p.setPen(Theme::LightGrid);
+            p.drawLine(0, y + rowH - 1, width(), y + rowH - 1);
+            p.setPen(Theme::TextPrimary);
+            // draw label with a small left padding
+            p.drawText(6, y + (rowH/2) + fm.ascent()/2 - fm.descent()/2, QString("Bed %1").arg(i+1));
+        }
+    }
+
+private:
+    BedGanttWidget* m_target{nullptr};
+    QScrollArea* m_scr{nullptr};
+    int m_scroll{0};
+};
 
 BedListWindow::BedListWindow(QWidget* parent) : QMainWindow(parent) {
     m_model = new BedModel(this);
@@ -33,15 +163,32 @@ BedListWindow::BedListWindow(QWidget* parent) : QMainWindow(parent) {
     QWidget* central = new QWidget(this);
     auto* lay = new QVBoxLayout(central);
     lay->setContentsMargins(0,0,0,0);
-    // Wrap gantt in a scroll area so scrollbars appear when content is larger than viewport
+    // fixed header that shows dates and stays visible while rows scroll
+    DateHeader* header = new DateHeader(m_gantt, central);
+    lay->addWidget(header);
+    // Wrap gantt in a scroll area so vertical scrollbar appears when content is larger than viewport
     QScrollArea* scr = new QScrollArea(central);
     scr->setWidgetResizable(false);
     scr->setWidget(m_gantt);
     // Disable horizontal scrollbar, keep vertical as-needed
     scr->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     scr->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
-    lay->addWidget(scr);
+
+    // Create a horizontal row containing a frozen labels column and the gantt scroll area.
+    QWidget* contentRow = new QWidget(central);
+    auto* hLay = new QHBoxLayout(contentRow);
+    hLay->setContentsMargins(0,0,0,0);
+    hLay->setSpacing(0);
+
+    BedLabelsWidget* labels = new BedLabelsWidget(m_gantt, scr, contentRow);
+    hLay->addWidget(labels);
+    hLay->addWidget(scr);
+
+    lay->addWidget(contentRow);
     setCentralWidget(central);
+
+    // keep header in sync with view changes (pan/zoom/dayWidth)
+    connect(m_gantt, &BedGanttWidget::viewChanged, header, QOverload<>::of(&QWidget::update));
 
     setWindowTitle("Bed Planner");
     setWindowModality(Qt::WindowModal);
