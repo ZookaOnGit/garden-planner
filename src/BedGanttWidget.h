@@ -26,6 +26,9 @@ public:
     // public facade to pan by pixels (used by header)
     void panByPixels(int dx) { panBy(dx); }
 
+    // expose model for read-only inspection by sibling widgets
+    BedModel* model() const { return m_model; }
+
     QSize sizeHint() const override { return QSize(1200, m_rowHeight * m_rows + 40); }
 
     int xForDate(const QDate& d) const;

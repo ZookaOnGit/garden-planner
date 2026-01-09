@@ -31,6 +31,7 @@ qt_add_executable(garden-planner
     src/BedGanttWidget.cpp
     src/BedListWindow.h
     src/BedListWindow.cpp
+    src/resources.qrc
 )
 
 target_link_libraries(garden-planner PRIVATE Qt6::Widgets Qt6::Sql)

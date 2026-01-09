@@ -18,6 +18,7 @@
 #include <QCollator>
 #include <QPainter>
 #include <QMouseEvent>
+#include <QPixmap>
 #include "Theme.h"
 
 // Small header widget that draws the timeline dates and stays fixed at top.
@@ -136,7 +137,63 @@ protected:
             p.drawLine(0, y + rowH - 1, width(), y + rowH - 1);
             p.setPen(Theme::TextPrimary);
             // draw label with a small left padding
-            p.drawText(6, y + (rowH/2) + fm.ascent()/2 - fm.descent()/2, QString("Bed %1").arg(i+1));
+            int textX = 6;
+            p.drawText(textX, y + (rowH/2) + fm.ascent()/2 - fm.descent()/2, QString("Bed %1").arg(i+1));
+
+            // check crops in this row and draw a small red flag on the right if any crop starts outside the recommended planting range
+            bool showFlag = false;
+            if (m_target && m_target->model()) {
+                BedModel* model = m_target->model();
+                for (const auto &c : model->crops()) {
+                    if (c.bed != i) continue;
+                    if (c.name.isEmpty()) continue;
+                    QSqlQuery q;
+                    q.prepare("SELECT plant_start, plant_end FROM crops WHERE name = :name LIMIT 1");
+                    q.bindValue(":name", c.name);
+                    if (q.exec() && q.next()) {
+                        QString ps = q.value(0).toString();
+                        QString pe = q.value(1).toString();
+                        QDate pstart = QDate::fromString(ps, Qt::ISODate);
+                        QDate pend = QDate::fromString(pe, Qt::ISODate);
+                        if (!pstart.isValid()) pstart = q.value(0).toDate();
+                        if (!pend.isValid()) pend = q.value(1).toDate();
+                        if (pstart.isValid() && pend.isValid()) {
+                            if (c.start < pstart || c.start > pend) { showFlag = true; break; }
+                        }
+                    }
+                }
+            }
+
+            if (showFlag) {
+                // draw embedded resource flag scaled to fit
+                static QPixmap s_labelFlag;
+                if (s_labelFlag.isNull()) s_labelFlag.load(":/icons/red-flag.png");
+                int pad = 6;
+                int flagH = qMax(8, rowH * 6 / 10);
+                int flagW = flagH; // square area
+                int flagX = width() - pad - flagW;
+                int flagY = y + (rowH - flagH)/2;
+                if (!s_labelFlag.isNull()) {
+                    QPixmap scaled = s_labelFlag.scaled(flagW, flagH, Qt::KeepAspectRatio, Qt::SmoothTransformation);
+                    int drawX = flagX + (flagW - scaled.width())/2;
+                    int drawY = flagY + (flagH - scaled.height())/2;
+                    p.drawPixmap(drawX, drawY, scaled);
+                } else {
+                    // fallback pennant
+                    int poleWidth = 2;
+                    int cx = width() - pad - poleWidth;
+                    int cy = y + rowH/2 - flagH/2;
+                    p.setPen(Qt::NoPen);
+                    p.setBrush(Theme::TextDark);
+                    p.drawRect(cx, cy, poleWidth, flagH);
+                    QPolygon poly;
+                    poly << QPoint(cx - 1, cy)
+                         << QPoint(cx - 1 - 8, cy + flagH/2)
+                         << QPoint(cx - 1, cy + flagH);
+                    p.setBrush(QColor(220,50,50));
+                    p.drawPolygon(poly);
+                }
+            }
         }
     }
 

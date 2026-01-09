@@ -14,6 +14,36 @@
 #include <QSqlError>
 #include <QDebug>
 #include "Theme.h"
+#include <QPixmap>
+
+// Helper: query catalog planting range for a crop name and return whether the crop's start
+// date is outside that range. Optionally returns a formatted plantingRange HTML string.
+static bool isStartOutsidePlantingRange(const BedCrop &c, QString &outPlantingRange) {
+    outPlantingRange.clear();
+    if (c.name.isEmpty()) return false;
+    QSqlQuery q;
+    q.prepare("SELECT plant_start, plant_end FROM crops WHERE name = :name LIMIT 1");
+    q.bindValue(":name", c.name);
+    if (q.exec() && q.next()) {
+        QString ps = q.value(0).toString();
+        QString pe = q.value(1).toString();
+        QDate pstart = QDate::fromString(ps, Qt::ISODate);
+        QDate pend = QDate::fromString(pe, Qt::ISODate);
+        // fallback to QDate value if ISO parsing didn't work
+        if (!pstart.isValid()) pstart = q.value(0).toDate();
+        if (!pend.isValid()) pend = q.value(1).toDate();
+        if (pstart.isValid() && pend.isValid()) {
+            QLocale loc = QLocale::system();
+            QString pstartStr = loc.toString(pstart, QLocale::ShortFormat);
+            QString pendStr = loc.toString(pend, QLocale::ShortFormat);
+            outPlantingRange = QString("<i>Recommended: %1 - %2</i>").arg(pstartStr.toHtmlEscaped(), pendStr.toHtmlEscaped());
+            return (c.start < pstart || c.start > pend);
+        }
+    } else if (q.lastError().isValid()) {
+        qDebug() << "Failed to query crop planting range:" << q.lastError().text();
+    }
+    return false;
+}
 
 BedGanttWidget::BedGanttWidget(QWidget* parent) : QWidget(parent) {
     setMinimumHeight(400);
@@ -90,6 +120,9 @@ void BedGanttWidget::paintEvent(QPaintEvent*) {
         int w = std::max(4, c.lengthDays * m_dayWidth);
         int y = r * h + 4;
         QRect rct(x, y, w, h - 8);
+        // Check planting range and whether this crop's start is out-of-range
+        QString plantingRangeHtml;
+        bool outOfRange = isStartOutsidePlantingRange(c, plantingRangeHtml);
     // Determine a stable color per crop name so identical crops share a color
     QColor fill = c.name.isEmpty() ? c.color : colorForName(c.name);
     if (!fill.isValid()) fill = c.color;
@@ -108,6 +141,33 @@ void BedGanttWidget::paintEvent(QPaintEvent*) {
     QFontMetrics fm(font());
     QString elided = fm.elidedText(label, Qt::ElideRight, rct.width() - 8);
         p.drawText(rct.adjusted(4,0,-4,0), Qt::AlignVCenter|Qt::AlignLeft, elided);
+
+        // draw small red flag pennant at the right edge of the crop bar if out of recommended planting range
+        if (outOfRange) {
+            // Attempt to load a user-provided red flag image from the working directory.
+            // Cache the pixmap in a static so we don't reload it every paint.
+            static QPixmap s_flagPix;
+            if (s_flagPix.isNull()) {
+                // Load from Qt resource (embedded). Resource path: :/icons/red-flag.png
+                s_flagPix.load(":/icons/red-flag.png");
+            }
+
+            int pad = 4;
+            int poleH = qMax(8, rct.height() * 6 / 10);
+            int flagW = poleH; // make icon roughly square and proportional to bar height
+            int flagH = poleH;
+            int flagX = rct.right() - pad - flagW;
+            int flagY = rct.top() + (rct.height() - flagH) / 2;
+
+            if (!s_flagPix.isNull()) {
+                // draw scaled pixmap preserving aspect ratio and filling the area
+                QPixmap scaled = s_flagPix.scaled(flagW, flagH, Qt::KeepAspectRatio, Qt::SmoothTransformation);
+                // center within the allocated rectangle
+                int drawX = flagX + (flagW - scaled.width())/2;
+                int drawY = flagY + (flagH - scaled.height())/2;
+                p.drawPixmap(drawX, drawY, scaled);
+            }
+        }
     }
 }
 
@@ -239,23 +299,9 @@ void BedGanttWidget::mouseMoveEvent(QMouseEvent* evt) {
                     QString endStr = loc.toString(endDate, QLocale::ShortFormat);
 
                     QString plantingRange;
+                    bool outOfRange = false;
                     if (!c.name.isEmpty()) {
-                        QSqlQuery q;
-                        q.prepare("SELECT plant_start, plant_end FROM crops WHERE name = :name LIMIT 1");
-                        q.bindValue(":name", c.name);
-                        if (q.exec() && q.next()) {
-                            QString ps = q.value(0).toString();
-                            QString pe = q.value(1).toString();
-                            QDate pstart = QDate::fromString(ps, Qt::ISODate);
-                            QDate pend = QDate::fromString(pe, Qt::ISODate);
-                            if (pstart.isValid() && pend.isValid()) {
-                                QString pstartStr = loc.toString(pstart, QLocale::ShortFormat);
-                                QString pendStr = loc.toString(pend, QLocale::ShortFormat);
-                                plantingRange = QString("<i>Recommended: %1 - %2</i>").arg(pstartStr.toHtmlEscaped(), pendStr.toHtmlEscaped());
-                            }
-                        } else if (q.lastError().isValid()) {
-                            qDebug() << "Failed to query crop planting range:" << q.lastError().text();
-                        }
+                        outOfRange = isStartOutsidePlantingRange(c, plantingRange);
                     }
 
                     QString tip = QString("<b>%1</b><br/>%2 - %3<br/>Length: %4 days<br/>Bed: %5<br/>%6")
@@ -265,6 +311,9 @@ void BedGanttWidget::mouseMoveEvent(QMouseEvent* evt) {
                                       .arg(c.lengthDays)
                                       .arg(c.bed + 1)
                                       .arg(plantingRange);
+                    if (outOfRange) {
+                        tip += QString("<br/><b style='color:#b22222'>Warning: Start date outside recommended planting range</b>");
+                    }
                     setToolTip(tip);
                     break;
                 }
