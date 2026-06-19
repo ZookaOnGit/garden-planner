@@ -53,6 +53,10 @@ void BedModel::loadFromDatabase() {
         c.lengthDays = q.value(4).toInt();
         QString col = q.value(5).toString();
         if (!col.isEmpty()) c.color = QColor(col);
+        
+        // Load harvest window from crops catalog
+        loadHarvestWindowForCrop(c);
+        
         m_crops.append(c);
         if (c.id > maxId) maxId = c.id;
     }
@@ -75,6 +79,7 @@ void BedModel::addCrop(const BedCrop& c) {
         } else {
             BedCrop copy = c;
             copy.id = q.lastInsertId().toInt();
+            loadHarvestWindowForCrop(copy);
             m_crops.append(copy);
             if (copy.id >= m_nextId) m_nextId = copy.id + 1;
             emit modelChanged();
@@ -84,6 +89,7 @@ void BedModel::addCrop(const BedCrop& c) {
     // fallback to in-memory only
     BedCrop copy = c;
     copy.id = nextId();
+    loadHarvestWindowForCrop(copy);
     m_crops.append(copy);
     emit modelChanged();
 }
@@ -139,6 +145,26 @@ void BedModel::clearAllCrops() {
     emit modelChanged();
 }
 
+void BedModel::loadHarvestWindowForCrop(BedCrop& crop) {
+    if (crop.name.isEmpty()) return;
+    
+    QSqlQuery q;
+    q.prepare("SELECT plant_start, plant_end, harvest_start, harvest_end FROM crops WHERE name = :name LIMIT 1");
+    q.bindValue(":name", crop.name);
+    if (q.exec() && q.next()) {
+        QDate plantStart = q.value(0).toDate();
+        QDate plantEnd = q.value(1).toDate();
+        QDate harvestStart = q.value(2).toDate();
+        QDate harvestEnd = q.value(3).toDate();
+        
+        if (plantStart.isValid() && plantEnd.isValid() && harvestStart.isValid() && harvestEnd.isValid()) {
+            // Calculate days from plant_start to harvest_start (minimum days to harvest)
+            crop.harvestLengthDaysMin = plantStart.daysTo(harvestStart);
+            // Calculate days from plant_end to harvest_end (maximum days to harvest)
+            crop.harvestLengthDaysMax = plantEnd.daysTo(harvestEnd);
+        }
+    }
+}
 int BedModel::nextId() {
     return m_nextId++;
 }

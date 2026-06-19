@@ -241,6 +241,9 @@ BedListWindow::BedListWindow(QWidget* parent) : QMainWindow(parent) {
     hLay->addWidget(labels);
     hLay->addWidget(scr);
 
+    // Keep labels updated when the model changes (e.g. user fixes an out-of-range crop)
+    if (m_model) connect(m_model, &BedModel::modelChanged, labels, QOverload<>::of(&QWidget::update));
+
     lay->addWidget(contentRow);
     setCentralWidget(central);
 

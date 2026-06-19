@@ -263,7 +263,7 @@ void GanttChartWidget::drawBars(QPainter& p) {
             QRect e(x1, baseline - h/2, x2 - x1, h);
             p.setPen(Theme::BarOutline);
             p.setBrush(Theme::PlantPrePost);
-            p.drawRect(e);            
+            p.drawRect(e);
         };
 
         auto drawRangeLaneHarvest = [&](const QDate& sowStart, const QDate& sowEnd, const QDate& plantStart, const QDate& plantEnd, int lane){
@@ -296,8 +296,8 @@ void GanttChartWidget::drawBars(QPainter& p) {
             QRect e(x1, baseline - h/2, x2 - x1, h);
             p.setPen(Theme::BarOutline);
             p.setBrush(Theme::HarvestPrePost);
-            p.drawRect(e);            
-        };        
+            p.drawRect(e);
+        };
 
         drawRangeLaneSow(c.sowStart, c.sowEnd, 0);
         drawRangeLanePlant(c.sowStart, c.sowEnd, c.plantStart, c.plantEnd, 1);

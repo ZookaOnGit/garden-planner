@@ -84,16 +84,11 @@ int main(int argc, char *argv[]) {
     auto* left = new LeftColumnWidget;
     // Keep items in a shared container so lambdas can refresh it easily.
     auto itemsPtr = std::make_shared<QVector<CropWindow>>(items);
-    left->setItems(*itemsPtr);
-    // Load saved left-column sort mode (0 = Default, 1 = Alphabetical)
-    int savedMode = SettingsManager::instance().loadLeftColumnSortMode();
-    left->setSortMode(static_cast<LeftColumnWidget::SortMode>(savedMode));
     // Example: reduce the left column width so it takes less horizontal space.
     // You can change this value or call left->setColumnWidth(...) from elsewhere.
     left->setColumnWidth(300);
 
     auto* chart = new GanttChartWidget;
-    chart->setItems(items);
     chart->setDayWidth(4);
     chart->showTodayLine(true);
     chart->showSubrowLabels(true);
@@ -153,6 +148,17 @@ int main(int argc, char *argv[]) {
         SettingsManager::instance().saveLeftColumnSortMode(static_cast<int>(left->sortMode()));
     });
 
+    // Now that the connection is in place, set the initial items on the left
+    // so any emitted `itemsReordered` will be received by the chart.
+    left->setItems(*itemsPtr);
+
+    // Load saved left-column sort mode (0 = Default, 1 = Alphabetical)
+    int savedMode = SettingsManager::instance().loadLeftColumnSortMode();
+    left->setSortMode(static_cast<LeftColumnWidget::SortMode>(savedMode));
+    // Ensure chart reflects the left column's current ordering even if
+    // `setSortMode` was a no-op (no itemsReordered emitted).
+    chart->setItems(left->items());
+
     QMainWindow mainWindow;
     mainWindow.setWindowTitle("Garden Planner");
     mainWindow.setCentralWidget(splitter);
@@ -179,8 +185,16 @@ int main(int argc, char *argv[]) {
     QSqlQuery q("SELECT * FROM crops WHERE hide != 'true' ORDER BY ABS(julianday(sow_end) - julianday('now')) ASC;");
         if (!q.isActive()) return false;
         *itemsPtr = loadCropsFromQuery(q);
+        // Update left column items first and re-apply the current sort mode so
+        // `itemsReordered` is emitted with the correctly-ordered list which
+        // will update `chart` via the connected slot. Avoid calling
+        // `chart->setItems` here with the raw DB order which could overwrite
+        // the sorted order.
         left->setItems(*itemsPtr);
-        chart->setItems(*itemsPtr);
+        left->setSortMode(left->sortMode());
+        // If setSortMode didn't emit (no change), make sure the chart still
+        // receives the current ordering from the left column.
+        chart->setItems(left->items());
         return true;
     };
 

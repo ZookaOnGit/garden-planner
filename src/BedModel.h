@@ -12,6 +12,8 @@ struct BedCrop {
     int bed{0};
     QDate start;
     int lengthDays{0};
+    int harvestLengthDaysMin{0};  // minimum days from plant to harvest start
+    int harvestLengthDaysMax{0};  // maximum days from plant to harvest end
     QColor color{Qt::green};
 };
 
@@ -40,6 +42,8 @@ signals:
     void modelChanged();
 
 private:
+    void loadHarvestWindowForCrop(BedCrop& crop);
+
     QVector<BedCrop> m_crops;
     int m_nextId{1};
 };

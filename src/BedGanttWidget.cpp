@@ -36,7 +36,7 @@ static bool isStartOutsidePlantingRange(const BedCrop &c, QString &outPlantingRa
             QLocale loc = QLocale::system();
             QString pstartStr = loc.toString(pstart, QLocale::ShortFormat);
             QString pendStr = loc.toString(pend, QLocale::ShortFormat);
-            outPlantingRange = QString("<i>Recommended: %1 - %2</i>").arg(pstartStr.toHtmlEscaped(), pendStr.toHtmlEscaped());
+            outPlantingRange = QString("<i>Recommended planting: %1 - %2</i>").arg(pstartStr.toHtmlEscaped(), pendStr.toHtmlEscaped());
             return (c.start < pstart || c.start > pend);
         }
     } else if (q.lastError().isValid()) {
@@ -126,6 +126,19 @@ void BedGanttWidget::paintEvent(QPaintEvent*) {
     // Determine a stable color per crop name so identical crops share a color
     QColor fill = c.name.isEmpty() ? c.color : colorForName(c.name);
     if (!fill.isValid()) fill = c.color;
+
+    // Draw harvest window as a semi-transparent band if harvest window data is available
+    if (c.harvestLengthDaysMin > 0 && c.harvestLengthDaysMax > c.harvestLengthDaysMin) {
+        int harvestMinX = x + c.harvestLengthDaysMin * m_dayWidth;
+        int harvestMaxX = x + c.harvestLengthDaysMax * m_dayWidth;
+        QRect harvestWindow(harvestMinX, y, harvestMaxX - harvestMinX, h - 8);
+
+        // Draw a lighter version of the crop color for the harvest window
+        QColor harvestColor = fill;
+        harvestColor.setAlpha(100);
+        p.fillRect(harvestWindow, harvestColor);
+    }
+
     p.setBrush(fill);
     // use Theme outline for a subtle border
     p.setPen(Theme::BarOutline);
